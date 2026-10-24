@@ -1,0 +1,28 @@
+//! Stable application actions; editing keys stay owned by the focused text widget.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Command {
+    New,
+    Delete,
+    Close,
+    Search,
+    Options,
+    Help,
+    Preview,
+    Save,
+    ExportNote,
+    ReloadTheme,
+    ImportTheme,
+    ExportTheme,
+    ThemesFolder,
+    ToggleTheme,
+    NextNote,
+    PreviousNote,
+    MoveTabLeft,
+    MoveTabRight,
+    CycleFocus,
+    Minimize,
+    Maximize,
+    SelectNote(usize),
+    ReloadShortcuts,
+    ShortcutsFolder,
+}

@@ -1,0 +1,39 @@
+mod command;
+mod dialogs;
+mod document_view;
+mod file_actions;
+mod files;
+mod font_options;
+mod font_preferences;
+mod keyboard;
+mod language;
+mod markdown;
+#[cfg(test)]
+mod markdown_tests;
+mod menu_actions;
+mod mode;
+mod motion_preferences;
+mod note_actions;
+mod persistence;
+mod quick_note_app;
+mod search;
+mod search_popup;
+mod settings_actions;
+mod settings_general;
+mod settings_navigation;
+mod settings_section;
+mod settings_view;
+mod shell;
+mod shortcut_preferences;
+mod shortcuts;
+#[cfg(test)]
+mod startup_fonts_tests;
+mod status_bar;
+mod tab_order;
+mod theme_actions;
+mod theme_files;
+
+pub use files::atomic_write;
+pub use files::data_directory;
+pub use mode::Mode;
+pub use quick_note_app::QuickNoteApp;

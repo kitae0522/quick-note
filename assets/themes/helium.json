@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "name": "Helium",
+  "appearance": "light",
+  "colors": {
+    "background": "#FBFBFC",
+    "toolbar": "#F0F1F3",
+    "foreground": "#24262B",
+    "secondary": "#5D626D",
+    "accent": "#5366A3",
+    "divider": "#DDE0E6",
+    "selection": "#E3E8F5",
+    "currentLine": "#E8ECF5"
+  },
+  "typography": { "fontFamily": "monospace", "fontSize": 14, "lineSpacing": 7 },
+  "layout": { "editorPadding": 28, "toolbarHeight": 44 }
+}

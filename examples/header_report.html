@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang=en>
+<meta charset=utf-8>
+<title>Quick Note · Header stress</title>
+<style>body{{font:13px/1.5 var(--font-sans,system-ui);margin:0}}
+section{{margin:20px 0}}
+p{{margin:0 0 6px;font-weight:600}}
+span,small{{font-weight:400;color:var(--muted-foreground,#666)}}
+.sample{{overflow-x:auto}}
+img{{display:block}}
+small{{display:block;margin-top:5px}}
+.context{{max-width:700px}}
+</style>
+<div class=context>
+<p>Header stress · Rust native renderer</p>Fixture data only. Each image renders <code>src/ui/header.rs</code> with the app’s real fonts, tokens and system-font fallback. The images preserve their actual width; wider cases scroll horizontally. macOS cases reserve space for the real OS window buttons, which are outside the GPU framebuffer. Windows controls are rendered by the actual header code; this is not a Windows runtime test. Controls in this report are static captures.</div>{sections}<p class=context>Zero notes, loading, error, disabled, numeric columns and flex siblings were excluded because they cannot reach this header. Default Helium appearance is shown; Graphite and keyboard behavior have separate app checks.</p>
+</html>

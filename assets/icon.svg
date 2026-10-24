@@ -1,4 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <rect width="64" height="64" rx="14" fill="#059669"/>
-  <text x="32" y="32" dy="0.35em" text-anchor="middle" font-family="ui-sans-serif, system-ui, -apple-system, sans-serif" font-size="26" font-weight="600" fill="#ffffff">QN</text>
+  <rect x="4" y="4" width="56" height="56" rx="13" fill="#ebebf0"/>
+  <g fill="none" stroke="#383b45" stroke-width="1.8" stroke-linecap="round">
+    <rect x="19" y="16" width="26" height="32" rx="2.5"/>
+    <path d="M25 25h14M25 32h14M25 39h9"/>
+  </g>
 </svg>

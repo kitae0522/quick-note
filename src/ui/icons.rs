@@ -1,0 +1,9 @@
+pub const SEARCH: &str = "\u{E30C}";
+pub const PLUS: &str = "\u{E3D4}";
+pub const CLOSE: &str = "\u{E4F6}";
+pub const MORE: &str = "\u{E1FE}";
+pub const LEFT: &str = "\u{E138}";
+pub const RIGHT: &str = "\u{E13A}";
+pub const CHECK: &str = "\u{E182}";
+pub const MINUS: &str = "\u{E32A}";
+pub const SQUARE: &str = "\u{E45E}";

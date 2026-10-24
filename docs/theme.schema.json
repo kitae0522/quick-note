@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Quick Note theme",
+  "type": "object",
+  "required": ["schemaVersion", "name", "appearance", "colors", "typography", "layout"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "name": { "type": "string", "minLength": 1, "maxLength": 60, "pattern": "\\S" },
+    "appearance": { "enum": ["light", "dark"] },
+    "colors": {
+      "type": "object",
+      "required": ["background", "toolbar", "foreground", "secondary", "accent", "divider", "selection"],
+      "properties": {
+        "background": { "$ref": "#/$defs/color" },
+        "toolbar": { "$ref": "#/$defs/color" },
+        "foreground": { "$ref": "#/$defs/color" },
+        "secondary": { "$ref": "#/$defs/color" },
+        "accent": { "$ref": "#/$defs/color" },
+        "divider": { "$ref": "#/$defs/color" },
+        "selection": { "$ref": "#/$defs/color" },
+        "currentLine": { "$ref": "#/$defs/color" }
+      }
+    },
+    "typography": {
+      "type": "object",
+      "required": ["fontFamily", "fontSize", "lineSpacing"],
+      "properties": {
+        "fontFamily": { "type": "string", "minLength": 1, "maxLength": 100, "pattern": "\\S" },
+        "fontSize": { "type": "number", "minimum": 11, "maximum": 32 },
+        "lineSpacing": { "type": "number", "minimum": 0, "maximum": 24 }
+      }
+    },
+    "layout": {
+      "type": "object",
+      "required": ["editorPadding", "toolbarHeight"],
+      "properties": {
+        "editorPadding": { "type": "number", "minimum": 12, "maximum": 64 },
+        "toolbarHeight": { "type": "number", "minimum": 32, "maximum": 56 }
+      }
+    }
+  },
+  "$defs": { "color": { "type": "string", "pattern": "^#[0-9a-fA-F]{6}$" } }
+}

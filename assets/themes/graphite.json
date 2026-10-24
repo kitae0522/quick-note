@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "name": "Graphite",
+  "appearance": "dark",
+  "colors": {
+    "background": "#1F2024",
+    "toolbar": "#27292E",
+    "foreground": "#EEEFF2",
+    "secondary": "#BEC4D0",
+    "accent": "#AABBEF",
+    "divider": "#3B3E46",
+    "selection": "#3C4965",
+    "currentLine": "#343F54"
+  },
+  "typography": { "fontFamily": "monospace", "fontSize": 14, "lineSpacing": 7 },
+  "layout": { "editorPadding": 28, "toolbarHeight": 44 }
+}
