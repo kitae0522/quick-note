@@ -32,7 +32,7 @@ pub fn icon_button(ui: &mut Ui, glyph: &str, label: &str, palette: Palette) -> R
             )
         })
         .inner;
-    response.widget_info(|| WidgetInfo::labeled(Role::Button, true, label));
+    response.widget_info(|| WidgetInfo::labeled(Role::Button, ui.is_enabled(), label));
     let pressed = motion::transition(
         ui.ctx(),
         response.id.with("press"),

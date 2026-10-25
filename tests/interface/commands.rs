@@ -49,7 +49,7 @@ fn every_options_action_is_reachable_by_tab_and_help_restores_the_editor() -> Re
             "한국어",
             "Helium · Light",
             "Graphite · Dark",
-            "Choose font…",
+            "Choose fonts…",
             "Markdown",
             "Import theme…",
             "Export theme…",

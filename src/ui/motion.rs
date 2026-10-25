@@ -2,12 +2,18 @@
 use eframe::egui;
 use eframe::egui::Context;
 use eframe::egui::Id;
+use eframe::egui::style::ScrollAnimation;
 
 pub const DURATION: f32 = 0.12;
 
 pub fn configure(context: &Context, reduced: bool) {
     context.all_styles_mut(|style| {
         style.animation_time = if reduced { 0.0 } else { DURATION };
+        style.scroll_animation = if reduced {
+            ScrollAnimation::none()
+        } else {
+            ScrollAnimation::duration(DURATION)
+        };
     });
     context.clear_animations();
 }

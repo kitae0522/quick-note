@@ -12,6 +12,18 @@ mod editing;
 mod empty_note;
 #[path = "interface/fixtures.rs"]
 mod fixtures;
+#[path = "interface/font_layout.rs"]
+mod font_layout;
+#[path = "interface/font_limits.rs"]
+mod font_limits;
+#[path = "interface/font_picker_polish.rs"]
+mod font_picker_polish;
+#[path = "interface/font_stacks.rs"]
+mod font_stacks;
+#[path = "interface/font_visibility.rs"]
+mod font_visibility;
+#[path = "interface/font_workspace.rs"]
+mod font_workspace;
 #[path = "interface/fonts.rs"]
 mod fonts;
 #[path = "interface/indentation.rs"]

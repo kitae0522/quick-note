@@ -27,6 +27,15 @@ pub fn font_display_name(name: &str) -> &str {
 }
 
 #[must_use]
+pub fn font_stack_display_name(names: &[String]) -> String {
+    names
+        .iter()
+        .map(|name| font_display_name(name))
+        .collect::<Vec<_>>()
+        .join(" → ")
+}
+
+#[must_use]
 pub fn is_bundled_font(name: &str) -> bool {
     matches!(
         name,

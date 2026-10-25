@@ -9,10 +9,13 @@ use eframe::egui::CentralPanel;
 use eframe::egui::FontFamily;
 use eframe::egui::FontId;
 use eframe::egui::Frame;
+use eframe::egui::Label;
 use eframe::egui::Panel;
 use eframe::egui::RichText;
+use eframe::egui::Role;
 use eframe::egui::ScrollArea;
 use eframe::egui::Ui;
+use eframe::egui::WidgetInfo;
 
 impl QuickNoteApp {
     pub(super) fn settings_view(&mut self, ui: &mut Ui, opacity: f32) {
@@ -21,27 +24,50 @@ impl QuickNoteApp {
         };
         let context = ui.ctx().clone();
         let palette = self.theme.palette();
+        let compact = context.content_rect().height() < 520.0;
         let mut back = false;
         self.focus_editor = false;
         Panel::top("settings-navigation")
             .show_separator_line(false)
-            .frame(
-                Frame::new()
-                    .fill(palette.background)
-                    .inner_margin(eframe::egui::Margin::symmetric(0, 16)),
-            )
+            .frame(Frame::new().fill(palette.background).inner_margin(
+                eframe::egui::Margin::symmetric(0, if compact { 4 } else { 16 }),
+            ))
             .show(ui, |ui| {
                 ui.multiply_opacity(opacity);
                 settings_column(ui, |ui| {
+                    let title = match section {
+                        SettingsSection::General => &self.locale.text().options,
+                        SettingsSection::Fonts => &self.locale.text().editor_font,
+                        SettingsSection::Shortcuts => &self.locale.text().keyboard_shortcuts,
+                    }
+                    .clone();
                     ui.horizontal(|ui| {
-                        let response = ui.add(
-                            Button::new(self.locale.text().back_to_note.as_str())
-                                .frame_when_inactive(false),
-                        );
+                        let response = if compact {
+                            ui::controls::icon_button(
+                                ui,
+                                ui::icons::CLOSE,
+                                &self.locale.text().back_to_note,
+                                palette,
+                            )
+                        } else {
+                            ui.add(
+                                Button::new(self.locale.text().back_to_note.as_str())
+                                    .frame_when_inactive(false),
+                            )
+                        };
                         ui::focus_ring(ui, &response, palette);
                         back = response.clicked();
                         if section != SettingsSection::General {
-                            let response = ui.button(self.locale.text().back_to_options.as_str());
+                            let response = if compact {
+                                ui::controls::icon_button(
+                                    ui,
+                                    ui::icons::LEFT,
+                                    &self.locale.text().back_to_options,
+                                    palette,
+                                )
+                            } else {
+                                ui.button(self.locale.text().back_to_options.as_str())
+                            };
                             if self.settings_focus_new
                                 && section == SettingsSection::Shortcuts
                                 && !self.close_blocked
@@ -55,17 +81,26 @@ impl QuickNoteApp {
                                 self.open_settings(SettingsSection::General, &context);
                             }
                         }
+                        if compact {
+                            let response = ui.add(
+                                Label::new(
+                                    RichText::new(&title)
+                                        .font(FontId::new(16.0, FontFamily::Name("medium".into()))),
+                                )
+                                .truncate(),
+                            );
+                            response
+                                .widget_info(|| WidgetInfo::labeled(Role::Heading, true, &title));
+                            response.on_hover_text(&title);
+                        }
                     });
-                    ui.add_space(12.0);
-                    let title = match section {
-                        SettingsSection::General => &self.locale.text().options,
-                        SettingsSection::Fonts => &self.locale.text().editor_font,
-                        SettingsSection::Shortcuts => &self.locale.text().keyboard_shortcuts,
-                    };
-                    ui.heading(
-                        RichText::new(title)
-                            .font(FontId::new(22.0, FontFamily::Name("medium".into()))),
-                    );
+                    if !compact {
+                        ui.add_space(12.0);
+                        ui.heading(
+                            RichText::new(&title)
+                                .font(FontId::new(22.0, FontFamily::Name("medium".into()))),
+                        );
+                    }
                 })
             });
         CentralPanel::default()

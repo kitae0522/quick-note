@@ -9,7 +9,9 @@ impl QuickNoteApp {
     pub fn set_theme(&mut self, id: &str, context: &Context) -> Result<()> {
         let mut theme = files::read_theme(&self.directory, id)?;
         self.apply_font_preference(&mut theme)?;
-        let fonts = self.fonts.definitions(&theme.typography.font_family)?;
+        let fonts = self
+            .fonts
+            .definitions_for_stack(&theme.typography.font_families())?;
         self.store.set_setting("theme", id)?;
         context.set_fonts(fonts);
         theme.apply(context);
@@ -25,10 +27,13 @@ impl QuickNoteApp {
         let result: Result<crate::appearance::Theme> = (|| {
             let mut theme = files::read_theme(&self.directory, &self.theme_id)?;
             self.apply_font_preference(&mut theme)?;
-            if theme.typography.font_family != self.theme.typography.font_family
+            if theme.typography.font_families() != self.theme.typography.font_families()
                 || self.theme_error.is_some()
             {
-                context.set_fonts(self.fonts.definitions(&theme.typography.font_family)?);
+                context.set_fonts(
+                    self.fonts
+                        .definitions_for_stack(&theme.typography.font_families())?,
+                );
                 self.font_pending = false;
             }
             Ok(theme)

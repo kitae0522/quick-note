@@ -26,6 +26,12 @@
       "required": ["fontFamily", "fontSize", "lineSpacing"],
       "properties": {
         "fontFamily": { "type": "string", "minLength": 1, "maxLength": 100, "pattern": "\\S" },
+        "fontFallbacks": {
+          "type": "array",
+          "maxItems": 7,
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1, "maxLength": 100, "pattern": "\\S" }
+        },
         "fontSize": { "type": "number", "minimum": 11, "maximum": 32 },
         "lineSpacing": { "type": "number", "minimum": 0, "maximum": 24 }
       }

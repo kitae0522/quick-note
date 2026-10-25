@@ -46,6 +46,10 @@ pub struct QuickNoteApp {
     pub(super) font_pending: bool,
     pub(super) font_query: String,
     pub(super) font_focus: bool,
+    pub(super) font_action_focus: Option<Id>,
+    pub(super) font_order_focus: Option<Id>,
+    pub(super) font_workspace_header: Option<Id>,
+    pub(super) font_workspace_bounds: Option<Rect>,
     pub(super) font_index: usize,
     pub(super) font_choices: appearance::FontChoices,
     pub(super) focus_editor: bool,
@@ -115,7 +119,7 @@ impl QuickNoteApp {
         let markdown_enabled = store.setting("markdownEnabled")?.as_deref() != Some("false");
         let reduce_motion = store.setting("reduceMotion")?.as_deref() == Some("true");
         let theme_id = store.setting("theme")?.unwrap_or_else(|| "helium".into());
-        let (mut theme, theme_error) = match files::read_theme(&directory, &theme_id) {
+        let (mut theme, mut theme_error) = match files::read_theme(&directory, &theme_id) {
             Ok(theme) => (theme, None),
             Err(error) => (
                 Theme::builtin("helium"),
@@ -126,11 +130,8 @@ impl QuickNoteApp {
                 ),
             ),
         };
-        if let Some(font) = store
-            .setting("editorFont")?
-            .filter(|value| !value.is_empty())
-        {
-            theme.typography.font_family = font;
+        if let Err(error) = super::font_preferences::apply_saved(&store, &mut theme) {
+            theme_error.get_or_insert(error);
         }
         let editor_metrics = EditorMetrics::new(&note);
         let (_, caret) = editor_metrics
@@ -151,6 +152,10 @@ impl QuickNoteApp {
             font_pending: false,
             font_query: String::new(),
             font_focus: false,
+            font_action_focus: None,
+            font_order_focus: None,
+            font_workspace_header: None,
+            font_workspace_bounds: None,
             font_index: 0,
             font_choices: appearance::FontChoices::default(),
             directory,
@@ -196,7 +201,7 @@ impl QuickNoteApp {
             _session_lock: session_lock,
         };
         app.restore_recovery();
-        if let Err(error) = app.fonts.preload(&app.theme.typography.font_family) {
+        if let Err(error) = app.fonts.preload(&app.theme.typography.font_families()) {
             app.theme_error.get_or_insert(error);
         }
         Ok(app)

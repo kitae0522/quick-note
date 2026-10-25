@@ -1,7 +1,9 @@
 //! Observable progress, interruption and repaint behavior of native UI transitions.
+use eframe::egui::CentralPanel;
 use eframe::egui::Context;
 use eframe::egui::Id;
 use eframe::egui::RawInput;
+use eframe::egui::ScrollArea;
 use quick_note::ui::motion;
 use std::time::Duration;
 
@@ -74,4 +76,46 @@ fn closing_a_surface_cancels_its_motion_and_an_immediate_reopen_is_safe() {
     assert!(sample(&context, 3, true, true).0 > 0.0);
     motion::configure(&context, true);
     assert_eq!(sample(&context, 4, true, true).0, 1.0);
+}
+
+#[test]
+fn reduced_motion_reveals_a_scrolled_target_without_animation() {
+    let context = Context::default();
+    motion::configure(&context, true);
+    for frame in 0..4 {
+        let input = RawInput {
+            screen_rect: Some(eframe::egui::Rect::from_min_size(
+                eframe::egui::Pos2::ZERO,
+                eframe::egui::vec2(320.0, 240.0),
+            )),
+            time: Some(f64::from(frame) / 60.0),
+            ..Default::default()
+        };
+        let mut frame_output = context.run_ui(input, |ui| {
+            CentralPanel::default().show(ui, |ui| {
+                let output = ScrollArea::vertical().max_height(100.0).show(ui, |ui| {
+                    let mut last = eframe::egui::Rect::NOTHING;
+                    for index in 0..30 {
+                        let response = ui.button(format!("Font {index}"));
+                        if index == 29 {
+                            last = response.rect;
+                            if frame == 1 {
+                                response.scroll_to_me(None);
+                            }
+                        }
+                    }
+                    last
+                });
+                if frame == 3 {
+                    assert!(
+                        output.inner_rect.contains_rect(output.inner),
+                        "target {:?}, viewport {:?}",
+                        output.inner,
+                        output.inner_rect
+                    );
+                }
+            });
+        });
+        frame_output.textures_delta.clear();
+    }
 }

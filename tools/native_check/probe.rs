@@ -1,8 +1,10 @@
 //! Isolated native-window driver. Production never imports this fixture harness.
+use eframe::egui::Color32;
 use eframe::egui::ColorImage;
 use eframe::egui::Context;
 use eframe::egui::DragAndDrop;
 use eframe::egui::Event;
+use eframe::egui::FontId;
 use eframe::egui::RawInput;
 use eframe::egui::Ui;
 use eframe::egui::ViewportCommand;
@@ -76,6 +78,18 @@ impl Probe {
         let content = context.content_rect();
         let popup = context
             .memory(|memory| memory.area_rect(eframe::egui::Id::unique("note-search-popup")));
+        let focused = context
+            .memory(|memory| memory.focused())
+            .and_then(|id| context.read_response(id))
+            .map(|response| response.rect);
+        let monospace_widths = context.fonts_mut(|fonts| {
+            ["AA|", "한|", "💡|"].map(|text| {
+                fonts
+                    .layout_no_wrap(text.into(), FontId::monospace(18.0), Color32::BLACK)
+                    .size()
+                    .x
+            })
+        });
         #[cfg(target_os = "macos")]
         let system_menu = super::menu::snapshot();
         #[cfg(not(target_os = "macos"))]
@@ -94,10 +108,13 @@ impl Probe {
             "language": self.app.locale.language.code(),
             "saved_label": self.app.locale.text().saved,
             "query": self.app.header.query,
+            "focused_bounds": focused.map(|rect| [rect.left(), rect.top(), rect.right(), rect.bottom()]),
+            "monospace_widths": monospace_widths,
             "content_bounds": [content.left(), content.top(), content.right(), content.bottom()],
             "search_popup_bounds": popup.map(|rect| [rect.left(), rect.top(), rect.right(), rect.bottom()]),
             "theme": self.app.theme.appearance,
             "editor_font": self.app.theme.typography.font_family,
+            "editor_fonts": self.app.theme.typography.font_families(),
             "markdown_enabled": self.app.markdown_enabled(),
             "settings_open": self.app.settings_open(),
             "local_font": context.fonts(|fonts| fonts.definitions().font_data.get("local-editor").map(|font| json!({"bytes":font.bytes().len(),"face_index":font.index}))),

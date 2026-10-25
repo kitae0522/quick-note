@@ -14,6 +14,7 @@ mod visuals;
 
 pub use fonts::editor_font;
 pub use fonts::font_display_name;
+pub use fonts::font_stack_display_name;
 pub use fonts::install_fonts;
 pub use fonts::is_bundled_font;
 pub use local_fonts::FontCatalog;

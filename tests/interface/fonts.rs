@@ -43,12 +43,16 @@ fn keyboard_font_search_applies_real_font_and_restores_it_after_restart() -> Res
     harness.run();
     harness.key_press_modifiers(Modifiers::COMMAND, Key::Comma);
     harness.run();
-    harness.get_by_label("Choose font…").focus();
+    harness.get_by_label("Choose fonts…").focus();
     harness.run();
     harness.key_press(Key::Enter);
     harness.run();
     wait_for(&mut harness, &name);
-    assert!(harness.get_by_label("Search fonts").is_focused());
+    assert!(
+        harness
+            .ctx
+            .memory(|memory| memory.has_focus(eframe::egui::Id::unique("font-search")))
+    );
     harness.event(Event::Text(name.clone()));
     harness.run();
     harness.key_press(Key::ArrowDown);
@@ -57,10 +61,24 @@ fn keyboard_font_search_applies_real_font_and_restores_it_after_restart() -> Res
     harness.run();
     harness.key_press(Key::Enter);
     harness.run();
+    assert_eq!(
+        harness.state().theme.typography.font_families(),
+        ["monospace", name.as_str()]
+    );
+    harness.get_by_label(&format!("Move {name} up")).focus();
+    harness.run();
+    harness.key_press(Key::Enter);
+    harness.run();
     assert_eq!(harness.state().theme.typography.font_family, name);
     assert_eq!(
-        harness.state().store.setting("editorFont")?.as_deref(),
-        Some(name.as_str())
+        serde_json::from_str::<Vec<String>>(
+            &harness
+                .state()
+                .store
+                .setting("editorFont")?
+                .expect("saved font stack")
+        )?,
+        [name.as_str(), "monospace"]
     );
     assert!(
         harness
@@ -78,6 +96,7 @@ fn keyboard_font_search_applies_real_font_and_restores_it_after_restart() -> Res
 
     let app = QuickNoteApp::try_new(directory.path().to_owned())?;
     assert_eq!(app.theme.typography.font_family, name);
+    assert_eq!(app.theme.typography.font_fallbacks, ["monospace"]);
     let mut harness = fixtures::harness(app, [920.0, 600.0]);
     harness.run();
     let deadline = Instant::now() + Duration::from_secs(3);
@@ -134,7 +153,7 @@ fn korean_composition_in_font_search_does_not_select_or_edit_a_note() -> Result<
     harness.run();
     harness.key_press_modifiers(Modifiers::COMMAND, Key::Comma);
     harness.run();
-    harness.get_by_label("Choose font…").click();
+    harness.get_by_label("Choose fonts…").click();
     harness.run();
     wait_for(&mut harness, &local_font());
     harness.event(Event::Ime(ImeEvent::Preedit {
@@ -163,12 +182,28 @@ fn font_picker_remains_keyboard_operable_in_the_minimum_korean_window() -> Resul
     harness.key_press(Key::Enter);
     harness.run();
     wait_for(&mut harness, &name);
-    assert!(harness.get_by_label("글꼴 검색").is_focused());
+    assert!(
+        harness
+            .ctx
+            .memory(|memory| memory.has_focus(eframe::egui::Id::unique("font-search")))
+    );
     harness.event(Event::Text(name.clone()));
     harness.run();
     harness.key_press(Key::Enter);
     harness.run();
+    harness.get_by_label("글꼴 우선순위 · 2/8개").focus();
+    harness.run();
+    harness.key_press(Key::Enter);
+    harness.run();
+    harness
+        .get_by_label(&format!("{name} 우선순위 올리기"))
+        .focus();
+    harness.run();
+    harness.key_press(Key::Enter);
+    harness.run();
     assert_eq!(harness.state().theme.typography.font_family, name);
+    let rect = harness.get_by_label(&format!("{name} 제거")).rect();
+    assert!(rect.left() >= 16.0 && rect.right() <= 304.0, "{rect:?}");
     fixtures::capture(&mut harness, "local-font-picker-narrow-ko");
     harness.key_press(Key::Escape);
     harness.run();

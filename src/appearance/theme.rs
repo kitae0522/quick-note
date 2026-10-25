@@ -40,8 +40,19 @@ pub struct Colors {
 #[serde(rename_all = "camelCase")]
 pub struct Typography {
     pub font_family: String,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub font_fallbacks: Vec<String>,
     pub font_size: f32,
     pub line_spacing: f32,
+}
+
+impl Typography {
+    #[must_use]
+    pub fn font_families(&self) -> Vec<String> {
+        std::iter::once(self.font_family.clone())
+            .chain(self.font_fallbacks.iter().cloned())
+            .collect()
+    }
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -108,10 +119,20 @@ impl Theme {
                     .into());
             }
         }
-        if self.typography.font_family.trim().is_empty()
-            || self.typography.font_family.chars().count() > 100
+        let families = self.typography.font_families();
+        if families.len() > 8
+            || families.iter().enumerate().any(|(index, name)| {
+                families[..index]
+                    .iter()
+                    .any(|other| name.eq_ignore_ascii_case(other))
+            })
         {
-            return Err(i18n::message(|m| &m.error_theme_font_name).into());
+            return Err(i18n::message(|m| &m.error_font_stack).into());
+        }
+        for name in families {
+            if name.trim().is_empty() || name.chars().count() > 100 {
+                return Err(i18n::message(|m| &m.error_theme_font_name).into());
+            }
         }
         if !(11.0..=32.0).contains(&self.typography.font_size)
             || !(0.0..=24.0).contains(&self.typography.line_spacing)

@@ -181,10 +181,14 @@ idle memory or CPU reduction. Window and font rendering are shared by both modes
 ## Themes
 
 Open **Settings → Export theme…**, edit the JSON, then **Import theme…**.
-You can adjust colors, editor font, text size, line spacing, padding and header height.
-**Choose font…** searches all installed font families. Use ↑/↓ and Enter to apply a
-font; the choice persists across theme changes and restarts. **Use theme font** restores
-the active theme's own family. Shared JSON accepts installed family names directly.
+You can adjust colors, editor fonts, text size, line spacing, padding and header height.
+**Choose fonts…** searches all installed families. Check fonts to add or remove them;
+use ↑/↓ priority buttons to reorder the selected stack. Search supports ↑/↓ and Enter,
+and Tab reaches every action. Choose 1–8 families, tried in order before bundled fallbacks.
+Source labels show which fonts are built in or installed. A mixed-script preview
+shows the active stack, and selection limits explain disabled controls.
+The stack persists across theme changes and restarts. **Use theme font** restores the
+active theme's stack. Shared JSON accepts `fontFamily` and optional `fontFallbacks`.
 The font picker starts with SF Pro, Pretendard, Noto Sans CJK, Menlo and Consolas.
 UI text uses installed SF Pro with bundled Pretendard and Noto Sans CJK fallbacks.
 The default editor uses Menlo on macOS and Consolas on Windows. Its grid gives Latin
@@ -214,6 +218,7 @@ python3 scripts/check-pairs.py     # bracket pairs, wrapping, undo and restart r
 python3 scripts/check-tab-order.py # tab drags, edge scrolling, order recovery and write failures
 python3 scripts/check-localization.py # language selection, restart and editable JSON
 python3 scripts/check-fonts.py     # installed-font picker, restart and missing-font recovery
+python3 scripts/check-font-layout.py # candidate resize focus, short-window navigation and Markdown grid
 python3 scripts/check-markdown.py  # default ON, toggle, restart and source preservation
 python3 scripts/check-settings.py  # page navigation, return focus and safe Cmd/Ctrl+W
 cargo run --example header_stress  # real header fixtures; writes an HTML report

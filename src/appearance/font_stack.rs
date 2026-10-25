@@ -28,15 +28,17 @@ pub(super) fn monospace(fonts: &mut FontDefinitions, primary: &str) -> Result<Ve
         .font_data
         .insert(primary.into(), Arc::new(primary_data));
     let mut family = vec![primary.into()];
-    for (name, key) in [
-        ("Noto Emoji", "editor-emoji"),
-        ("Noto Sans CJK", "editor-cjk"),
-        ("Pretendard", "editor-korean"),
+    for (name, suffix) in [
+        ("Noto Emoji", "emoji"),
+        ("Noto Sans CJK", "cjk"),
+        ("Pretendard", "korean"),
     ] {
         let mut data = (*fonts.font_data[name]).clone();
         data.tweak.monospace_cell_width = Some(cell);
-        fonts.font_data.insert(key.into(), Arc::new(data));
-        family.push(key.into());
+        // Each primary owns its fallback metrics, including the separate Markdown grid.
+        let key = format!("{primary}-{suffix}");
+        fonts.font_data.insert(key.clone(), Arc::new(data));
+        family.push(key);
     }
     Ok(family)
 }

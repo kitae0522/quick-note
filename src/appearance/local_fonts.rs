@@ -11,24 +11,24 @@ use std::thread;
 
 struct PreparedFonts {
     native: SystemFonts,
-    initial: Option<(String, Result<FontDefinitions>)>,
+    initial: Option<(Vec<String>, Result<FontDefinitions>)>,
 }
 
 #[derive(Default)]
 pub struct FontCatalog {
     pending: Option<mpsc::Receiver<PreparedFonts>>,
     ready: Option<SystemFonts>,
-    initial: Option<(String, Result<FontDefinitions>)>,
+    initial: Option<(Vec<String>, Result<FontDefinitions>)>,
     wake: Arc<Mutex<Option<Context>>>,
 }
 
 impl FontCatalog {
-    /// Starts preparing the saved font without requiring a window or egui context.
-    pub fn preload(&mut self, name: &str) -> Result<()> {
-        self.start(Some(name.into()))
+    /// Starts preparing the saved stack without requiring a window or egui context.
+    pub fn preload(&mut self, names: &[String]) -> Result<()> {
+        self.start(Some(names.to_vec()))
     }
 
-    fn start(&mut self, name: Option<String>) -> Result<()> {
+    fn start(&mut self, name: Option<Vec<String>>) -> Result<()> {
         if self.ready.is_none() && self.pending.is_none() {
             let (sender, receiver) = mpsc::channel();
             let wake = self.wake.clone();
@@ -89,8 +89,14 @@ impl FontCatalog {
         self.ready.as_ref().map(|fonts| fonts.names.as_slice())
     }
 
-    /// Installs UI weights and one chosen editor face, preserving TTC indices and variations.
+    /// Installs UI weights and one editor family, preserving TTC indices and variations.
     pub fn definitions(&mut self, name: &str) -> Result<FontDefinitions> {
+        self.definitions_for_stack(&[name.to_owned()])
+    }
+
+    /// Resolves configured families before automatic bundled fallbacks.
+    /// Uninstalled families are skipped; an entirely unavailable stack is an error.
+    pub fn definitions_for_stack(&mut self, names: &[String]) -> Result<FontDefinitions> {
         if self.ready.is_none() {
             match self.pending.take() {
                 Some(receiver) => self.accept(receiver.recv()?),
@@ -98,7 +104,7 @@ impl FontCatalog {
             }
         }
         if let Some((prepared_name, definitions)) = self.initial.take()
-            && prepared_name == name
+            && prepared_name == names
         {
             return definitions;
         }
@@ -106,6 +112,6 @@ impl FontCatalog {
             .ready
             .as_mut()
             .expect("native catalog initialized above");
-        font_definitions::definitions(native, name)
+        font_definitions::definitions(native, names)
     }
 }

@@ -73,8 +73,8 @@ impl QuickNoteApp {
             }
             ui.add(
                 Label::new(
-                    RichText::new(appearance::font_display_name(
-                        &self.theme.typography.font_family,
+                    RichText::new(appearance::font_stack_display_name(
+                        &self.theme.typography.font_families(),
                     ))
                     .color(palette.secondary),
                 )
