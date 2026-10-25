@@ -102,6 +102,8 @@ Use horizontal scrolling or the note shortcuts to reach other tabs.
 Drag a tab title to rearrange notes. Hold it at either edge to scroll to hidden tabs;
 release inside the strip to save the order. Escape or dropping outside cancels the move.
 The order survives restarts, and moving a tab keeps the current note and caret intact.
+Drag empty header space to move the window. The editor opens with a caret and no
+placeholder text. Returning from a native window drag releases the app's pointer state.
 Tab and Shift+Tab move through the settings controls. Enter or Space
 activates a control, and Esc restores the previous focus. Search keeps Enter with
 an active IME composition before using it to open a result.
@@ -206,6 +208,7 @@ standard checks. See [Rust conventions](docs/rust-style.md).
 python3 scripts/check-ui.py        # a GUI session on macOS is required
 python3 scripts/check-menu.py      # actual AppKit menus and native key equivalents
 python3 scripts/check-input.py     # canvas, keyboard and Korean IME event replays
+python3 scripts/check-appkit-input.py # native AppKit dispatch, drag separation and input after drag
 python3 scripts/check-line-delete.py # single-press line deletion, composed-text undo and recovery
 python3 scripts/check-pairs.py     # bracket pairs, wrapping, undo and restart recovery
 python3 scripts/check-tab-order.py # tab drags, edge scrolling, order recovery and write failures

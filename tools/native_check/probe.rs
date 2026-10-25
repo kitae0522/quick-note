@@ -32,6 +32,10 @@ pub(super) struct Probe {
     pub(super) exit_after_first: bool,
     pub(super) sequence: u64,
     pub(super) pending: Option<(u64, Instant)>,
+    pub(super) native_pending: Option<(u64, Instant)>,
+    pub(super) native_expected: Option<Value>,
+    pub(super) native_delivered: bool,
+    pub(super) native_mode: bool,
     pub(super) pending_frames: HashMap<String, (Value, Instant)>,
     pub(super) screenshots_tx: mpsc::Sender<(String, Arc<ColorImage>, Instant)>,
     pub(super) screenshots_rx: mpsc::Receiver<(String, Arc<ColorImage>, Instant)>,
@@ -76,7 +80,14 @@ impl Probe {
         let system_menu = super::menu::snapshot();
         #[cfg(not(target_os = "macos"))]
         let system_menu = Value::Null;
+        #[cfg(target_os = "macos")]
+        let native_window = super::appkit::snapshot();
+        #[cfg(not(target_os = "macos"))]
+        let native_window = Value::Null;
         json!({
+            "native_window": native_window,
+            "native_event_delivered": self.native_delivered,
+            "focus_helpers_enabled": !self.native_mode,
             "sequence": sequence,
             "system_menu": system_menu,
             "menu_key_handled": self.menu_key_handled,
@@ -117,7 +128,9 @@ impl Probe {
 
 impl eframe::App for Probe {
     fn logic(&mut self, context: &Context, _frame: &mut eframe::Frame) {
-        if !self.ready || self.pending.is_some() || !self.pending_frames.is_empty() {
+        if !self.native_mode
+            && (!self.ready || self.pending.is_some() || !self.pending_frames.is_empty())
+        {
             // A fully covered window gets no UI passes or framebuffer captures.
             // Restore the fixture's visibility before acknowledging its input.
             self.focus_fixture(context);

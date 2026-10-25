@@ -5,6 +5,7 @@ use super::HeaderState;
 use super::WindowControls;
 use super::search_field;
 use super::tab_strip::TabStrip;
+use super::window_drag;
 use crate::appearance::Palette;
 use crate::model::NoteSummary;
 use crate::ui::controls;
@@ -17,6 +18,7 @@ use eframe::egui::Layout;
 use eframe::egui::Margin;
 use eframe::egui::Rect;
 use eframe::egui::Role;
+use eframe::egui::Sense;
 use eframe::egui::Stroke;
 use eframe::egui::Ui;
 use eframe::egui::WidgetInfo;
@@ -32,6 +34,21 @@ pub fn header(
 ) -> HeaderOutput {
     let width = ui.available_width();
     let height = ui.available_height().clamp(32.0, 56.0);
+    let left = ui.max_rect().left()
+        + if platform == WindowControls::Mac {
+            safe_area::MAC_CONTROLS_WIDTH as f32
+        } else {
+            0.0
+        };
+    let margin = Rect::from_min_size(
+        egui::pos2(left, ui.max_rect().top()),
+        egui::vec2(safe_area::EDGE_INSET as f32, height),
+    );
+    window_drag::hand_off(ui.interact(
+        margin,
+        ui.scope_id().with("window-drag-margin"),
+        Sense::DRAG,
+    ));
     let mut output = HeaderOutput {
         action: None,
         search_rect: Rect::NOTHING,
@@ -130,7 +147,9 @@ pub fn header(
                 }
                 let spacer = ui.available_width() - 36.0 - window_width;
                 if spacer > 0.0 {
-                    ui.add_space(spacer);
+                    window_drag::hand_off(
+                        ui.allocate_response(egui::vec2(spacer, control_height), Sense::DRAG),
+                    );
                 }
                 if controls::icon_button(ui, icons::MORE, text.more_options.as_str(), palette)
                     .clicked()

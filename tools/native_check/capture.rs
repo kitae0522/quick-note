@@ -19,7 +19,9 @@ impl Probe {
         self.app.show(ui);
         if context.input(|input| input.focused) {
             self.queued_events.clear();
-        } else if !self.ready || self.pending.is_some() || !self.pending_frames.is_empty() {
+        } else if !self.native_mode
+            && (!self.ready || self.pending.is_some() || !self.pending_frames.is_empty())
+        {
             self.focus_fixture(&context);
         }
         if self

@@ -2,7 +2,6 @@
 use super::QuickNoteApp;
 use crate::ui::header;
 use crate::ui::motion;
-use eframe::egui::DragAndDrop;
 use eframe::egui::Event;
 use eframe::egui::Frame;
 use eframe::egui::Id;
@@ -12,7 +11,6 @@ use eframe::egui::Panel;
 use eframe::egui::RichText;
 use eframe::egui::Role;
 use eframe::egui::Ui;
-use eframe::egui::Vec2;
 use eframe::egui::ViewportCommand;
 use eframe::egui::WidgetInfo;
 
@@ -77,17 +75,6 @@ impl QuickNoteApp {
         self.search_was_focused = header.search_focused;
         if let Some(action) = header.action {
             self.action(action, &context);
-        }
-        let drag = context.input(|input| {
-            input.pointer.primary_down()
-                && input.pointer.delta() != Vec2::ZERO
-                && input
-                    .pointer
-                    .interact_pos()
-                    .is_some_and(|position| position.y < header_height)
-        });
-        if drag && !context.egui_is_using_pointer() && !DragAndDrop::has_any_payload(&context) {
-            context.send_viewport_cmd(ViewportCommand::StartDrag);
         }
         if self.settings.is_none() {
             self.status_bar(ui);

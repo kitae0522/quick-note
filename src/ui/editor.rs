@@ -116,7 +116,6 @@ pub fn editor(
                 .align(Align2::LEFT_TOP)
                 .lock_focus(true)
                 .text_color(palette.foreground)
-                .hint_text(text.start_writing.as_str())
                 .layouter(&mut layouter)
                 .show(ui);
             if *focus {
@@ -125,12 +124,7 @@ pub fn editor(
                 *focus = !output.response.has_focus();
             }
             output.response.widget_info(|| {
-                let mut info = WidgetInfo::text_edit(
-                    true,
-                    &note.body,
-                    &note.body,
-                    text.start_writing.as_str(),
-                );
+                let mut info = WidgetInfo::text_edit(true, &note.body, &note.body, "");
                 info.label = Some(text.note_content.as_str().into());
                 info
             });

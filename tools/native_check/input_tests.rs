@@ -16,7 +16,7 @@ use std::sync::Mutex;
 use std::sync::mpsc;
 use std::time::Instant;
 
-fn replay_twice(command: Value, clipboard: Option<&str>) -> Result<String> {
+fn replay_twice(command: Value, clipboard: Option<&str>, native: bool) -> Result<String> {
     let directory = tempfile::tempdir()?;
     let output = directory.path().join("probe");
     fs::create_dir(&output)?;
@@ -35,6 +35,10 @@ fn replay_twice(command: Value, clipboard: Option<&str>) -> Result<String> {
         exit_after_first: false,
         sequence: 0,
         pending: None,
+        native_pending: native.then_some((1, Instant::now())),
+        native_expected: native.then(|| json!({"type":"native_key"})),
+        native_delivered: false,
+        native_mode: native,
         pending_frames: HashMap::new(),
         screenshots_tx,
         screenshots_rx,
@@ -50,6 +54,9 @@ fn replay_twice(command: Value, clipboard: Option<&str>) -> Result<String> {
         .push(Event::Text("UNRELATED PHYSICAL INPUT".into()));
     if let Some(clipboard) = clipboard {
         first.events.push(Event::Paste(clipboard.into()));
+    }
+    if native {
+        first.events.push(Event::Text("7".into()));
     }
     probe.feed_input(&context, &mut first);
     let mut retry = first.clone();
@@ -70,14 +77,22 @@ fn replay_twice(command: Value, clipboard: Option<&str>) -> Result<String> {
 
 #[test]
 fn a_text_command_survives_logic_only_ticks_and_edits_exactly_once() -> Result<()> {
-    let body = replay_twice(json!({"sequence":1,"type":"text","text":"("}), None)?;
+    let body = replay_twice(json!({"sequence":1,"type":"text","text":"("}), None, false)?;
     assert_eq!(body, "()");
     Ok(())
 }
 
 #[test]
 fn an_expected_clipboard_event_survives_logic_only_ticks_without_pairing() -> Result<()> {
-    let body = replay_twice(json!({"sequence":1,"type":"report"}), Some("("))?;
+    let body = replay_twice(json!({"sequence":1,"type":"report"}), Some("("), false)?;
     assert_eq!(body, "(");
+    Ok(())
+}
+
+#[cfg(target_os = "macos")]
+#[test]
+fn native_input_survives_logic_only_ticks_without_accepting_unrelated_typing() -> Result<()> {
+    let body = replay_twice(json!({"sequence":1,"type":"report"}), None, true)?;
+    assert_eq!(body, "7");
     Ok(())
 }

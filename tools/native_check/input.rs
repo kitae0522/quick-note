@@ -17,7 +17,21 @@ impl Probe {
     pub(super) fn feed_input(&mut self, context: &Context, input: &mut RawInput) {
         // A foreground fixture window must never record the person's unrelated typing.
         let mut clipboard_received = false;
+        #[cfg(target_os = "macos")]
+        let mut native_received = false;
+        #[cfg(not(target_os = "macos"))]
+        let native_received = false;
         input.events.retain(|event| {
+            #[cfg(target_os = "macos")]
+            if self
+                .native_expected
+                .as_ref()
+                .is_some_and(|expected| super::appkit::matches(expected, event))
+            {
+                native_received = true;
+                self.queued_events.push(event.clone());
+                return true;
+            }
             let clipboard = self.clipboard_requested
                 && matches!(event, Event::Cut | Event::Copy | Event::Paste(_));
             clipboard_received |= clipboard;
@@ -29,11 +43,26 @@ impl Probe {
         if clipboard_received {
             self.clipboard_requested = false;
         }
+        if self.native_pending.is_some() {
+            if native_received
+                || self
+                    .native_pending
+                    .is_some_and(|(_, start)| start.elapsed().as_secs_f32() > 1.0)
+            {
+                self.native_delivered = native_received;
+                self.pending = self.native_pending.take();
+                self.native_expected = None;
+            }
+            context.request_repaint_after(std::time::Duration::from_millis(1));
+            return;
+        }
         if !self.ready {
             return;
         }
         if !input.focused {
-            self.focus_fixture(context);
+            if !self.native_mode {
+                self.focus_fixture(context);
+            }
             return;
         }
         // eframe can call the hook during logic-only ticks without running the UI.
@@ -56,6 +85,17 @@ impl Probe {
         self.menu_key_handled = None;
         let injected_start = input.events.len();
         match command["type"].as_str().unwrap_or("") {
+            #[cfg(target_os = "macos")]
+            "native_pointer" | "native_key" => {
+                self.native_mode = true;
+                self.native_pending = self.pending.take();
+                self.native_expected = Some(command.clone());
+                self.native_delivered = false;
+                if let Err(error) = super::appkit::post(&command) {
+                    self.fail(error);
+                }
+                context.request_repaint();
+            }
             #[cfg(target_os = "macos")]
             "menu" => {
                 self.clipboard_requested = command["clipboard"].as_bool().unwrap_or(false);

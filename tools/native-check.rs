@@ -1,4 +1,7 @@
 //! Isolated native-window diagnostics; production never imports this driver.
+#[cfg(target_os = "macos")]
+#[path = "native_check/appkit.rs"]
+mod appkit;
 #[path = "native_check/capture.rs"]
 mod capture;
 #[cfg(target_os = "macos")]
@@ -105,6 +108,10 @@ fn main() -> eframe::Result {
                 exit_after_first,
                 sequence: 0,
                 pending: None,
+                native_pending: None,
+                native_expected: None,
+                native_delivered: false,
+                native_mode: false,
                 pending_frames: HashMap::new(),
                 screenshots_tx,
                 screenshots_rx,

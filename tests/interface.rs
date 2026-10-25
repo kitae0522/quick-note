@@ -8,6 +8,8 @@ mod deletion;
 mod dialogs;
 #[path = "interface/editing.rs"]
 mod editing;
+#[path = "interface/empty_note.rs"]
+mod empty_note;
 #[path = "interface/fixtures.rs"]
 mod fixtures;
 #[path = "interface/fonts.rs"]
@@ -52,3 +54,5 @@ mod tab_drag;
 mod tab_input;
 #[path = "interface/tab_navigation.rs"]
 mod tab_navigation;
+#[path = "interface/window_drag.rs"]
+mod window_drag;

@@ -826,6 +826,12 @@ declare_class!(
             true
         }
 
+        #[method(mouseDownCanMoveWindow)]
+        fn mouse_down_can_move_window(&self) -> bool {
+            // The client owns hit testing, including tabs under a transparent native title bar.
+            false
+        }
+
         #[method(acceptsFirstMouse:)]
         fn accepts_first_mouse(&self, _event: &NSEvent) -> bool {
             trace_scope!("acceptsFirstMouse:");

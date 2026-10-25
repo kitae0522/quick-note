@@ -16,6 +16,9 @@ from native_fixture import db_note
 ROOT = Path(__file__).resolve().parent.parent
 OUTPUT = ROOT / ".artifacts" / ("tab-order-native-" + time.strftime("%Y%m%d-%H%M%S"))
 BINARY = ROOT / "target/release/native-check"
+# Default 920pt window: tab viewport after the 16pt safe area and 32pt controls.
+STRIP_WIDTH = 474
+LEFT_EDGE, RIGHT_EDGE = 320, 790
 OUTPUT.mkdir(parents=True)
 subprocess.run(["cargo", "build", "--locked", "--release", "--features", "diagnostics",
                 "--bin", "native-check"], cwd=ROOT, check=True)
@@ -145,18 +148,18 @@ with tempfile.TemporaryDirectory(prefix="quick-note-tab-order-") as temporary:
         original = tab_ids(report)
         active, body = report["note_id"], report["body"]
         press(app, 370)
-        move(app, 802)
-        maximum = len(original) * 146 - 2 - 490
+        move(app, RIGHT_EDGE)
+        maximum = len(original) * 146 - 2 - STRIP_WIDTH
         scroll_edge(app, maximum)
         app.command("03-edge-scroll-passed", "screenshot", name="03-edge-scroll-passed")
-        report = release(app, 802)
+        report = release(app, RIGHT_EDGE)
         expected = original[1:] + original[:1]
         assert tab_ids(report) == expected == stored_order(data), report
         assert report["note_id"] == active and report["body"] == body, report
         press(app, 720)
-        move(app, 316)
+        move(app, LEFT_EDGE)
         scroll_edge(app, 0)
-        report = release(app, 316)
+        report = release(app, LEFT_EDGE)
         assert tab_ids(report) == original == stored_order(data), report
         checks.append("Both edges auto-scroll to offscreen tabs while the dragged source is virtualized out")
 

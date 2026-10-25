@@ -28,6 +28,10 @@ Windows backend source is unchanged.
   Request activation once at that reveal, respecting both the window's `active` flag
   and the event loop's `activate_ignoring_other_apps` setting. Later hide/show calls
   keep the upstream behavior.
+- Return `false` from the client view's `mouseDownCanMoveWindow`. Transparent native
+  title bars must not turn client tab gestures into OS window drags. Empty header
+  space explicitly starts a native drag instead. See Apple's
+  [view mouse routing contract](https://developer.apple.com/documentation/appkit/nsview/mousedowncanmovewindow).
 
 `tests/ime_policies.rs` compiles the exact two policy modules and their routing-to-editor
 checks (16 tests) on every platform. Native-window egui event replays
