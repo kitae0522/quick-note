@@ -59,7 +59,7 @@ pub(super) fn parse(source: &str, platform: Platform) -> Result<KeyboardShortcut
         .strip_prefix('F')
         .and_then(|name| name.parse::<u8>().ok())
         .is_some_and(|number| (1..=35).contains(&number));
-    if !function_key && !(modifiers.command || modifiers.ctrl || modifiers.mac_cmd || modifiers.alt)
+    if !(function_key || modifiers.command || modifiers.ctrl || modifiers.mac_cmd || modifiers.alt)
     {
         return Err(i18n::message(|m| &m.error_shortcut_reserved)
             .arg("shortcut", source)
