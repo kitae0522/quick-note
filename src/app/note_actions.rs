@@ -29,6 +29,7 @@ impl QuickNoteApp {
     }
 
     pub(super) fn display(&mut self, note: Note, focus: FocusTarget) {
+        self.document_find.close();
         self.note = note;
         self.markdown_cache = None;
         self.composing = false;
@@ -37,7 +38,6 @@ impl QuickNoteApp {
         self.mode = Mode::Edit;
         self.header.reveal_active = true;
         self.search_open = false;
-        self.search_was_focused = false;
         self.settings = None;
         self.settings_request = None;
         self.dirty = false;

@@ -30,7 +30,7 @@ pub struct HeaderOutput {
     pub action: Option<HeaderAction>,
     pub search_rect: Rect,
     pub search_changed: bool,
-    pub search_focused: bool,
+    pub search_gained_focus: bool,
 }
 
 /// Native chrome determines the header's reserved space and window controls.

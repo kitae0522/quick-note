@@ -12,6 +12,7 @@ impl QuickNoteApp {
     }
 
     pub(super) fn open_settings(&mut self, section: SettingsSection, context: &Context) {
+        self.document_find.close();
         if self.settings.is_some() {
             self.settings = Some(section);
         } else {
@@ -53,11 +54,13 @@ impl QuickNoteApp {
     }
 
     pub(super) fn restore_focus(&mut self, context: &Context) {
-        if let Some(id) = self.previous_focus {
+        let previous_focus = self
+            .previous_focus
+            .filter(|id| context.read_response(*id).is_some());
+        if let Some(id) = previous_focus {
             context.memory_mut(|memory| memory.request_focus(id));
         }
         let editor = Id::unique(("note-editor", &self.note.id));
-        self.focus_editor =
-            self.mode == Mode::Edit && self.previous_focus.is_none_or(|id| id == editor);
+        self.focus_editor = self.mode == Mode::Edit && previous_focus.is_none_or(|id| id == editor);
     }
 }

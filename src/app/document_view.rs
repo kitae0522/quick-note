@@ -3,6 +3,8 @@ use super::Mode;
 use super::QuickNoteApp;
 use crate::i18n;
 use crate::ui::editor;
+use crate::ui::editor::EditorInteraction;
+use crate::ui::editor_find::FindHighlights;
 use eframe::egui::CentralPanel;
 use eframe::egui::FontId;
 use eframe::egui::Frame;
@@ -26,21 +28,34 @@ impl QuickNoteApp {
             .frame(Frame::new().fill(palette.background))
             .show(ui, |ui| {
                 if self.mode == Mode::Edit {
+                    let reveal = std::mem::take(&mut self.document_find.reveal);
+                    let find = self.document_find.open.then_some(FindHighlights {
+                        matches: &self.document_find.matches,
+                        active: self.document_find.active,
+                        reveal,
+                    });
                     let result = editor::editor(
                         ui,
                         &mut self.note,
                         &mut self.editor_metrics,
                         &self.theme,
-                        &mut self.focus_editor,
-                        &mut self.restore_cursor,
+                        EditorInteraction {
+                            focus: &mut self.focus_editor,
+                            restore_cursor: &mut self.restore_cursor,
+                            find,
+                        },
                         self.locale.text(),
                     );
                     self.location = result.location;
                     if result.changed {
+                        self.document_find.invalidate();
                         self.markdown_cache = None;
                         self.dirty = true;
                         let _saved = self.persist();
                         self.editor_metrics.saved(&self.note);
+                        if self.document_find.open {
+                            ui.ctx().request_repaint();
+                        }
                     } else if result.selection_changed
                         && let Err(error) = self.store.save_selection(&self.note)
                     {

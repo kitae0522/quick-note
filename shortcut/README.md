@@ -35,6 +35,10 @@ indentation use the editor's native bindings. These files configure application 
 OS-reserved shortcuts may be handled before the app receives them.
 
 All action IDs and their defaults are listed in [bindings.json](bindings.json).
+`find_in_note`, `replace_in_note`, `find_next` and `find_previous` control the active
+note's find panel. `search_notes` keeps searching across notes. The former default
+Cmd/Ctrl+F alias for `search_notes` moves to `find_in_note` in memory; existing JSON
+is never rewritten. Custom assignments retain priority over newly added default keys.
 `move_tab_left` and `move_tab_right` reorder the current tab; `previous_note` and
 `next_note` switch notes in that order. The default reorder keys are Ctrl+Shift+PageUp
 and Ctrl+Shift+PageDown on both platforms.

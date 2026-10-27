@@ -65,14 +65,13 @@ impl QuickNoteApp {
             })
             .inner;
         self.search_rect = header.search_rect;
-        if header.search_changed || (header.search_focused && !self.search_was_focused) {
+        if header.search_changed || header.search_gained_focus {
             if !self.search_open {
+                self.request_search(&context);
                 self.previous_focus = focus_before_header;
             }
-            self.search_open = true;
             self.search_query = None;
         }
-        self.search_was_focused = header.search_focused;
         if let Some(action) = header.action {
             self.action(action, &context);
         }
@@ -129,7 +128,9 @@ impl QuickNoteApp {
             {
                 self.focus_editor = true;
             }
+            self.find_bar(ui);
             self.document_view(ui);
+            self.finish_find_navigation(&context);
             self.finish_settings_navigation(&context);
         }
         let search_opacity =

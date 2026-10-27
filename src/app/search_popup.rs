@@ -111,6 +111,7 @@ impl QuickNoteApp {
                     (ui.available_height() - help.size().y - ui.spacing().item_spacing.y).max(0.0);
                 let mut scrolling = ScrollArea::vertical()
                     .id_salt("search-results")
+                    .min_scrolled_height(height.min(36.0))
                     .max_height(height)
                     .auto_shrink([false, true]);
                 if self.search_reveal {

@@ -22,6 +22,8 @@ cp "$binary_directory/quick-note" "$application/Contents/MacOS/QuickNote"
 cp assets/AppIcon.icns "$application/Contents/Resources/AppIcon.icns"
 mkdir -p "$application/Contents/Resources/Licenses"
 cp assets/licenses/*.txt "$application/Contents/Resources/Licenses/"
+cp assets/licenses/Third-party.html "$application/Contents/Resources/Licenses/"
+cp LICENSE "$application/Contents/Resources/Licenses/Quick-Note-LICENSE.txt"
 mkdir -p "$application/Contents/Resources/i18n"
 cp i18n/*.json "$application/Contents/Resources/i18n/"
 cat > "$application/Contents/Info.plist" <<'PLIST'

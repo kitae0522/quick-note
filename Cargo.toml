@@ -1,9 +1,12 @@
 [package]
 name = "quick-note"
-version = "0.2.0"
+version = "0.2.0-alpha.1"
 edition = "2024"
 rust-version = "1.95"
 default-run = "quick-note"
+description = "A local-first notebook for macOS and Windows with immediate saving."
+repository = "https://github.com/kitae0522/quick-note"
+license = "MIT"
 
 [dependencies]
 eframe = { version = "0.37.0", default-features = false, features = ["accesskit", "clipboard", "default_fonts", "links", "system_fonts", "wgpu"] }
@@ -21,6 +24,7 @@ unicode-segmentation = "1.13"
 open = "5.4"
 tempfile = "3.0"
 image = { version = "0.25", default-features = false, features = ["png"], optional = true }
+caseless = "0.2.2"
 
 [target.'cfg(target_os = "macos")'.dependencies]
 muda = { version = "0.21.2", default-features = false }

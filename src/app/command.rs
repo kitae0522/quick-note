@@ -20,6 +20,10 @@ impl QuickNoteApp {
             Command::Delete => Some(HeaderAction::Delete(self.note.id.clone())),
             Command::Close => Some(HeaderAction::CloseWindow),
             Command::Search => Some(HeaderAction::Search),
+            Command::Find | Command::Replace | Command::FindNext | Command::FindPrevious => {
+                self.find_command(command, context);
+                None
+            }
             Command::Options | Command::Help => {
                 self.open_settings(
                     if matches!(command, Command::Help) {
@@ -33,6 +37,7 @@ impl QuickNoteApp {
             }
             Command::Preview if !self.markdown_enabled => None,
             Command::Preview => {
+                self.document_find.close();
                 self.mode = if self.mode == Mode::Edit {
                     Mode::Preview
                 } else {

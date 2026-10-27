@@ -7,6 +7,7 @@ use eframe::egui::Context;
 
 impl QuickNoteApp {
     pub fn request_search(&mut self, context: &Context) {
+        self.document_find.close();
         if !self.search_open && !self.settings_open() {
             self.previous_focus = context.memory(|memory| memory.focused());
         }
@@ -22,7 +23,7 @@ impl QuickNoteApp {
     }
 
     pub fn refresh_search(&mut self) -> Result<()> {
-        let query = self.header.query.trim().to_lowercase();
+        let query = caseless::default_case_fold_str(self.header.query.trim());
         if self.search_query.as_deref() == Some(query.as_str()) {
             return Ok(());
         }

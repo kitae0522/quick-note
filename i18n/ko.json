@@ -203,5 +203,19 @@
   "font_installed": "설치됨",
   "font_system": "시스템 글꼴",
   "font_preview": "글꼴 미리보기",
-  "font_preview_sample": "Aa Bb 0123 · 한글 · 中文 · 💡"
+  "font_preview_sample": "Aa Bb 0123 · 한글 · 中文 · 💡",
+  "find_in_note": "노트 안에서 찾기",
+  "replace_in_note": "노트 안에서 바꾸기",
+  "find_text": "찾을 내용",
+  "replace_with": "바꿀 내용",
+  "replace_one": "바꾸기",
+  "replace_all": "모두 바꾸기",
+  "find_next": "다음 결과",
+  "find_previous": "이전 결과",
+  "find_close": "찾기 닫기",
+  "find_match_case": "대소문자 구분",
+  "find_toggle_replace": "바꾸기 표시",
+  "find_match_count": "{total}개 중 {current}번째",
+  "find_replaced": "{count}개를 바꿨어요",
+  "find_no_matches": "결과 없음"
 }

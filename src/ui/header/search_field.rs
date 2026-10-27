@@ -22,7 +22,7 @@ pub(super) fn show(
     let mut action = None;
     let search_rect;
     let mut search_changed = false;
-    let mut search_focused = false;
+    let mut search_gained_focus = false;
     let search_width = if width >= 800.0 {
         186.0
     } else if width >= 620.0 {
@@ -70,7 +70,7 @@ pub(super) fn show(
             info
         });
         search_changed = response.changed();
-        search_focused = response.has_focus();
+        search_gained_focus = response.gained_focus();
         controls::focus_ring(ui, &response, palette);
         search_rect = response.rect;
     } else {
@@ -86,6 +86,6 @@ pub(super) fn show(
         action,
         search_rect,
         search_changed,
-        search_focused,
+        search_gained_focus,
     }
 }

@@ -1,7 +1,9 @@
 pub mod controls;
 pub mod editor;
+pub(crate) mod editor_find;
 mod editor_gutter;
 mod editor_metrics;
+pub(crate) mod editor_mutation;
 mod editor_pairs;
 pub use editor_metrics::EditorMetrics;
 pub mod header;

@@ -182,6 +182,16 @@ impl BuiltMenu {
                 context,
             )?;
         }
+        edit.append(&PredefinedMenuItem::separator())?;
+        for (label, command) in [
+            (&text.find_in_note, Command::Find),
+            (&text.replace_in_note, Command::Replace),
+            (&text.find_next, Command::FindNext),
+            (&text.find_previous, Command::FindPrevious),
+            (&text.find_note, Command::Search),
+        ] {
+            built.app(&edit, label, command, shortcuts, context)?;
+        }
         let view = Submenu::new(&text.menu_view, true);
         built.app(&view, &text.preview, Command::Preview, shortcuts, context)?;
         built.app(

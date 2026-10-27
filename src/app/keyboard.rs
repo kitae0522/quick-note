@@ -40,6 +40,7 @@ impl QuickNoteApp {
         if ime_owns_navigation {
             return;
         }
+        self.find_keys(context);
         let text_focused = context
             .memory(|memory| memory.focused())
             .is_some_and(|id| TextEditState::load(context, id).is_some());
@@ -74,7 +75,9 @@ impl QuickNoteApp {
             );
         }
         if escape {
-            if self.search_open {
+            if self.document_find.open {
+                self.close_find();
+            } else if self.search_open {
                 self.search_open = false;
                 self.restore_focus(context);
             } else if self.settings_open() {

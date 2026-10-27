@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Quick Note third-party licenses</title>
+  <style>
+    body { margin: 32px auto; padding: 0 24px; max-width: 960px; font: 16px/1.5 sans-serif; }
+    pre { white-space: pre-wrap; overflow-wrap: anywhere; font: 13px/1.5 monospace; }
+    section { margin-top: 40px; }
+  </style>
+</head>
+<body>
+  <h1>Quick Note third-party licenses</h1>
+  <p>Rust dependencies for the supported macOS and Windows targets.
+     Bundled font and icon notices are supplied alongside this file.</p>
+  {{#each licenses}}
+  <section>
+    <h2>{{name}}</h2>
+    <ul>
+      {{#each used_by}}
+      {{#if (eq crate.name "quick-note")}}
+      <li><a href="https://github.com/kitae0522/quick-note/tree/v{{crate.version}}">{{crate.name}} {{crate.version}}</a></li>
+      {{else}}
+      <li><a href="https://crates.io/crates/{{crate.name}}/{{crate.version}}">{{crate.name}} {{crate.version}}</a></li>
+      {{/if}}
+      {{/each}}
+    </ul>
+    <pre>{{text}}</pre>
+  </section>
+  {{/each}}
+</body>
+</html>

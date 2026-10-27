@@ -609,9 +609,11 @@ impl FontFace {
             .round_ui();
 
         let axes = font_data.skrifa.axes();
-        // Override the default coordinates with ones specified via FontTweak, then the ones specified directly via the
-        // argument (probably from TextFormat).
-        let settings = core::iter::chain(self.tweak.coords.as_ref(), coords.as_ref());
+        // Use the reading size for optical spacing; explicit font/run coordinates retain priority.
+        let optical_size = (font_types::Tag::new(b"opsz"), font_size);
+        let settings = core::iter::once(&optical_size)
+            .chain(self.tweak.coords.as_ref())
+            .chain(coords.as_ref());
         let location = axes.location(settings);
         let location_hash = LocationHash::new(&location);
 

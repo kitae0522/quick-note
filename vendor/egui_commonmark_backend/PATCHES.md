@@ -16,3 +16,8 @@ the app assigns one accessible foreground color to both.
 
 Quick Note's interface tests exercise this path with AccessKit and the real renderer.
 Recheck these changes when updating the upstream dependency.
+
+List markers reserve the same first-row height as the following wrapped item UI:
+the larger of the text line height (including extra line spacing) and the UI's
+minimum interaction height. Bullet radii still use the font height. This aligns
+filled bullets, hollow bullets and ordered numbers without enlarging the dots.

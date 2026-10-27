@@ -203,5 +203,19 @@
   "font_installed": "Installed",
   "font_system": "System font",
   "font_preview": "Font preview",
-  "font_preview_sample": "Aa Bb 0123 · 한글 · 中文 · 💡"
+  "font_preview_sample": "Aa Bb 0123 · 한글 · 中文 · 💡",
+  "find_in_note": "Find in note",
+  "replace_in_note": "Replace in note",
+  "find_text": "Find",
+  "replace_with": "Replace with",
+  "replace_one": "Replace",
+  "replace_all": "Replace all",
+  "find_next": "Next match",
+  "find_previous": "Previous match",
+  "find_close": "Close find",
+  "find_match_case": "Match case",
+  "find_toggle_replace": "Show replace",
+  "find_match_count": "{current} of {total}",
+  "find_replaced": "Replaced {count}",
+  "find_no_matches": "No matches"
 }

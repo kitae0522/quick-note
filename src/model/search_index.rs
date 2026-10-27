@@ -20,9 +20,9 @@ impl SearchIndex {
                 .map(|note| {
                     let summary = note.summary();
                     Entry {
-                        title: summary.title.to_lowercase(),
+                        title: caseless::default_case_fold_str(&summary.title),
                         summary,
-                        body: note.body.to_lowercase(),
+                        body: caseless::default_case_fold_str(&note.body),
                     }
                 })
                 .collect(),
@@ -30,7 +30,7 @@ impl SearchIndex {
     }
 
     pub fn search(&self, query: &str, untitled: &str) -> Vec<NoteSummary> {
-        let untitled = untitled.to_lowercase();
+        let untitled = caseless::default_case_fold_str(untitled);
         self.entries
             .iter()
             .filter(|entry| {

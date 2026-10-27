@@ -2,6 +2,11 @@
 
 Base: crates.io `egui` 0.37.0. Keep the upstream tree, Cargo metadata and licenses.
 
+The crates.io archive omits the workspace license files. Restored `LICENSE-MIT`
+and `LICENSE-APACHE` from upstream Git blobs
+`673ea5f0505d6fa65c6a2b6a753c93b8e19d11b9` and
+`11069edd79019f7dafbe3138841cf289209270dd`, respectively.
+
 - Add opt-in `TextEdit::input_handler` and `TextEditMutation`. The callback runs
   inside TextEdit's existing event loop, using the current selection after earlier
   events and pointer interaction. It is skipped during active IME composition.

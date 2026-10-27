@@ -22,35 +22,26 @@ pub fn newline(ui: &mut Ui) {
 }
 
 pub fn bullet_point(ui: &mut Ui) {
-    let (rect, _) = ui.allocate_exact_size(
-        egui::vec2(width_body_space(ui) * 4.0, height_body(ui)),
-        Sense::hover(),
-    );
+    let rect = list_marker_rect(ui);
     ui.painter().circle_filled(
         rect.center(),
-        rect.height() / 6.0,
+        height_body(ui) / 6.0,
         ui.visuals().strong_text_color(),
     );
 }
 
 pub fn bullet_point_hollow(ui: &mut Ui) {
-    let (rect, _) = ui.allocate_exact_size(
-        egui::vec2(width_body_space(ui) * 4.0, height_body(ui)),
-        Sense::hover(),
-    );
+    let rect = list_marker_rect(ui);
     ui.painter().circle(
         rect.center(),
-        rect.height() / 6.0,
+        height_body(ui) / 6.0,
         egui::Color32::TRANSPARENT,
         egui::Stroke::new(0.6, ui.visuals().strong_text_color()),
     );
 }
 
 pub fn number_point(ui: &mut Ui, number: &str) {
-    let (rect, _) = ui.allocate_exact_size(
-        egui::vec2(width_body_space(ui) * 4.0, height_body(ui)),
-        Sense::hover(),
-    );
+    let rect = list_marker_rect(ui);
     ui.painter().text(
         rect.right_center(),
         egui::Align2::RIGHT_CENTER,
@@ -58,6 +49,16 @@ pub fn number_point(ui: &mut Ui, number: &str) {
         TextStyle::Body.resolve(ui.style()),
         ui.visuals().strong_text_color(),
     );
+}
+
+fn list_marker_rect(ui: &mut Ui) -> Rect {
+    // List text uses horizontal_wrapped, whose first row is at least interact_size.y high.
+    let height = (height_body(ui) + ui.spacing().extra_text_line_spacing)
+        .max(ui.spacing().interact_size.y);
+    ui.allocate_exact_size(
+        egui::vec2(width_body_space(ui) * 4.0, height),
+        Sense::hover(),
+    ).0
 }
 
 #[inline]

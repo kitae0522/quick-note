@@ -2,6 +2,8 @@ use crate::appearance::Theme;
 use crate::model::CursorLocation;
 use crate::model::Note;
 use crate::ui::EditorMetrics;
+use crate::ui::editor_find;
+use crate::ui::editor_find::FindHighlights;
 use crate::ui::editor_gutter;
 use crate::ui::editor_pairs;
 use eframe::egui;
@@ -24,15 +26,25 @@ pub struct EditorOutput {
     pub location: CursorLocation,
 }
 
-pub fn editor(
+pub(crate) struct EditorInteraction<'a> {
+    pub focus: &'a mut bool,
+    pub restore_cursor: &'a mut bool,
+    pub find: Option<FindHighlights<'a>>,
+}
+
+pub(crate) fn editor(
     ui: &mut Ui,
     note: &mut Note,
     metrics: &mut EditorMetrics,
     theme: &Theme,
-    focus: &mut bool,
-    restore_cursor: &mut bool,
+    interaction: EditorInteraction<'_>,
     text: &crate::i18n::Messages,
 ) -> EditorOutput {
+    let EditorInteraction {
+        focus,
+        restore_cursor,
+        find,
+    } = interaction;
     let palette = theme.palette();
     let editor_id = Id::unique(("note-editor", &note.id));
     let canvas = ui.available_rect_before_wrap();
@@ -99,6 +111,7 @@ pub fn editor(
                 }
                 ui.fonts_mut(|fonts| fonts.layout_job(job))
             };
+            let highlights = find.as_ref().map(|_| ui.painter().add(egui::Shape::Noop));
             let mut pair_input = editor_pairs::input;
             let output = TextEdit::multiline(&mut note.body)
                 .input_handler(&mut pair_input)
@@ -129,6 +142,11 @@ pub fn editor(
                 info
             });
             result.changed = output.response.changed();
+            if !result.changed
+                && let (Some(find), Some(layer)) = (&find, highlights)
+            {
+                editor_find::paint(ui, &output, find, palette, layer);
+            }
             metrics.update(note, result.changed);
             let lines = metrics.lines();
             let caret = if let Some(cursor) = output.cursor_range {

@@ -17,6 +17,10 @@ pub(crate) const ACTIONS: &[Action] = &[
     action("delete_note", Command::Delete, |m| &m.shortcut_delete),
     action("close_window", Command::Close, |m| &m.shortcut_close),
     action("search_notes", Command::Search, |m| &m.find_note),
+    action("find_in_note", Command::Find, |m| &m.find_in_note),
+    action("replace_in_note", Command::Replace, |m| &m.replace_in_note),
+    action("find_next", Command::FindNext, |m| &m.find_next),
+    action("find_previous", Command::FindPrevious, |m| &m.find_previous),
     action("open_settings", Command::Options, |m| &m.options),
     action("keyboard_shortcuts", Command::Help, |m| {
         &m.keyboard_shortcuts

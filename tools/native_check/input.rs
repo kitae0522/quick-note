@@ -137,6 +137,9 @@ impl Probe {
                     "n" => Key::N,
                     "k" => Key::K,
                     "p" => Key::P,
+                    "f" => Key::F,
+                    "g" => Key::G,
+                    "f3" => Key::F3,
                     "m" => Key::M,
                     "w" => Key::W,
                     "s" => Key::S,
@@ -171,7 +174,7 @@ impl Probe {
                     ctrl: (command_key && !cfg!(target_os = "macos"))
                         || command["control"].as_bool().unwrap_or(false),
                     shift: command["shift"].as_bool().unwrap_or(false),
-                    alt: false,
+                    alt: command["alt"].as_bool().unwrap_or(false),
                 };
                 input.events.push(Event::ModifiersChanged(modifiers));
                 for pressed in [true, false] {

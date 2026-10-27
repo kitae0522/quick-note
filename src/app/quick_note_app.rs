@@ -1,5 +1,6 @@
 //! Native application state, construction and framework integration.
 use super::Mode;
+use super::document_find_state::DocumentFind;
 use super::files;
 use super::settings_section::SettingsSection;
 use crate::appearance;
@@ -56,6 +57,7 @@ pub struct QuickNoteApp {
     pub(super) restore_cursor: bool,
     pub(super) editor_metrics: EditorMetrics,
     pub(super) location: CursorLocation,
+    pub(super) document_find: DocumentFind,
     pub(super) search_open: bool,
     pub(super) search_focus_popup: bool,
     pub(super) search_results: Vec<NoteSummary>,
@@ -64,7 +66,6 @@ pub struct QuickNoteApp {
     pub(super) search_index: usize,
     pub(super) search_reveal: bool,
     pub(super) search_rect: Rect,
-    pub(super) search_was_focused: bool,
     pub(super) previous_focus: Option<Id>,
     pub(super) settings: Option<SettingsSection>,
     pub(super) settings_request: Option<SettingsSection>,
@@ -171,6 +172,7 @@ impl QuickNoteApp {
             restore_cursor: true,
             editor_metrics,
             location,
+            document_find: DocumentFind::default(),
             search_open: false,
             search_focus_popup: false,
             search_results: Vec::new(),
@@ -179,7 +181,6 @@ impl QuickNoteApp {
             search_index: 0,
             search_reveal: true,
             search_rect: Rect::NOTHING,
-            search_was_focused: false,
             previous_focus: None,
             settings: None,
             settings_request: None,

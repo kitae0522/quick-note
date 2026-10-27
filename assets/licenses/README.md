@@ -23,3 +23,22 @@ The fonts are embedded so common English, Korean and emoji text does not wait fo
 
 SF Pro, Menlo and Consolas are loaded from the host's installed fonts. Their font
 files are not copied into the app bundle. Geist remains available for existing themes.
+
+## Rust dependencies
+
+`Third-party.html` lists dependency licenses for the supported macOS and Windows
+targets. It includes versioned crate links for obtaining the unmodified source.
+The `egui-MIT.txt` and `egui-APACHE.txt` files also retain the egui workspace's
+original notices, which its published crate archives omit. Their upstream Git
+blob IDs are `673ea5f0505d6fa65c6a2b6a753c93b8e19d11b9` and
+`11069edd79019f7dafbe3138841cf289209270dd`.
+
+After changing Cargo dependencies, regenerate the checked-in notice file:
+
+```sh
+cargo install cargo-about --locked --version 0.9.3
+python3 scripts/generate-licenses.py
+```
+
+The configuration is in `about.toml`. Application packages include these notices,
+the font/icon license texts and Quick Note's own license.

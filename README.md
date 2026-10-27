@@ -5,6 +5,17 @@
 A small, local-first notebook for macOS and Windows. Open it and write.
 Built in Rust with egui, native GPU rendering and SQLite. No webview or account.
 
+**v0.2.0-alpha.1** is the first public alpha.
+[Downloads and release notes](https://github.com/kitae0522/quick-note/releases/tag/v0.2.0-alpha.1).
+The macOS download is for Apple Silicon on macOS 14 or newer. The Windows download
+is experimental and targets x86-64. Both packages are unsigned by a verified publisher;
+the macOS app has local ad-hoc signing and is not notarized.
+Keep a backup of your note data while trying the alpha. Physical Korean IME,
+VoiceOver and actual Windows window/input behavior still need manual verification.
+
+Quick Note's own code is [MIT licensed](LICENSE). Vendored libraries, fonts and
+icons retain their respective licenses. Packages include the full notices in `Licenses`.
+
 - An editable draft on first launch; the last note and cursor on return.
 - Every edit commits immediately. Closing a saved note needs no save prompt.
 - All notes stay in one compact, horizontally scrolling tab strip. Drag tabs to reorder.
@@ -54,7 +65,10 @@ accessibility and rendering still need verification on a Windows machine.
 | Action | macOS | Windows |
 | --- | --- | --- |
 | New note | Cmd+N | Ctrl+N |
-| Search all notes | Cmd+P or Cmd+F | Ctrl+P or Ctrl+F |
+| Search all notes | Cmd+P | Ctrl+P |
+| Find in current note | Cmd+F | Ctrl+F |
+| Replace in current note | Cmd+Option+F | Ctrl+Alt+F |
+| Next / previous match | Cmd+G / Cmd+Shift+G | Ctrl+G / Ctrl+Shift+G |
 | Edit / Markdown preview | Cmd+Shift+M | Ctrl+Shift+M |
 | Delete current note · confirms when nonempty | Cmd+W | Ctrl+W |
 | Close the window, keeping notes | Cmd+Shift+W | Ctrl+Shift+W |
@@ -78,6 +92,14 @@ accessibility and rendering still need verification on a Windows machine.
 These are the defaults. Use **Settings → Keyboard shortcuts → Open shortcuts folder**
 to edit UTF-8 `shortcut/bindings.json`. Reload there or return to the app to apply it.
 See [shortcut configuration](shortcut/README.md) for action IDs, aliases and examples.
+
+Find uses literal text, with an optional **Match case** toggle. Enter and Shift+Enter
+navigate matches from the find field; F3 and Shift+F3 work too. **Replace** and
+**Replace all** affect only the current note. Every replacement saves immediately;
+replacing all is one undo step. Esc closes the panel and returns to writing.
+Case-insensitive search uses Unicode case folding in both search panels. Greek
+sigma forms and `Straße` / `STRASSE` match. Replacements retain original UTF-8
+ranges and never replace only part of an expanded character. Notes are not normalized.
 
 On macOS, the system menu bar provides **Quick Note, File, Edit, View, Window and Help**.
 It follows the current language and shortcut configuration. Edit actions target the
@@ -191,6 +213,8 @@ The stack persists across theme changes and restarts. **Use theme font** restore
 active theme's stack. Shared JSON accepts `fontFamily` and optional `fontFallbacks`.
 The font picker starts with SF Pro, Pretendard, Noto Sans CJK, Menlo and Consolas.
 UI text uses installed SF Pro with bundled Pretendard and Noto Sans CJK fallbacks.
+Variable fonts use the selected point size for optical spacing, keeping small text
+out of the font's display-size spacing. Explicit variation coordinates retain priority.
 The default editor uses Menlo on macOS and Consolas on Windows. Its grid gives Latin
 letters, digits and spaces one cell, and Hangul/CJK and emoji clusters two cells,
 without stretching their outlines. Combining accents share their base cell.
@@ -207,11 +231,17 @@ Authored application, test and tool files stay within 250 lines. Upstream files
 under `vendor/` retain their original structure. The size guard runs with the
 standard checks. See [Rust conventions](docs/rust-style.md).
 
+[GitHub Actions](https://github.com/kitae0522/quick-note/actions/workflows/ci.yml)
+runs the standard checks and builds an Apple Silicon app on macOS. Windows CI
+checks all targets, tests storage/search/shortcut/input-policy logic and builds
+the MSVC package. These automated checks do not verify physical input or screen readers.
+
 ```sh
 ./scripts/check.sh
 python3 scripts/check-ui.py        # a GUI session on macOS is required
 python3 scripts/check-menu.py      # actual AppKit menus and native key equivalents
 python3 scripts/check-input.py     # canvas, keyboard and Korean IME event replays
+python3 scripts/check-find.py      # current-note search, literal replacements, undo and restart
 python3 scripts/check-appkit-input.py # native AppKit dispatch, drag separation and input after drag
 python3 scripts/check-line-delete.py # single-press line deletion, composed-text undo and recovery
 python3 scripts/check-pairs.py     # bracket pairs, wrapping, undo and restart recovery

@@ -19,7 +19,6 @@ use crate::{
 
 use super::{
     ByteRangeExt as _, Galley, Glyph, LayoutJob, LayoutSection, PlacedRow, Row, RowVisuals,
-    VariationCoords,
     family::FamilyKey,
     font_face::{FontFace, GlyphInfo, ShapedGlyph},
     glyph_atlas::{GlyphAllocation, OutlineGlyph, RasterGlyphAllocation},
@@ -683,7 +682,7 @@ fn layout_section(
                 flags |= harfrust::BufferFlags::END_OF_TEXT;
             }
 
-            let glyph_buffer = shape_text(font_face, run_text, &format.coords, shape_buffer, flags);
+            let glyph_buffer = shape_text(font_face, run_text, &face_metrics, shape_buffer, flags);
 
             layout_shaped_run(
                 fonts,
@@ -1669,23 +1668,18 @@ fn segment_into_runs(
 fn shape_text(
     font_face: &FontFace,
     text: &str,
-    coords: &VariationCoords,
+    metrics: &StyledMetrics,
     mut buffer: harfrust::UnicodeBuffer,
     flags: harfrust::BufferFlags,
 ) -> harfrust::GlyphBuffer {
     let font_ref = font_face.skrifa_font_ref();
-    let tweak = font_face.tweak();
-
-    // Build shaper with variable font instance if variation coordinates are set.
-    let variations: Vec<harfrust::Variation> = iter::chain(tweak.coords.as_ref(), coords.as_ref())
-        .map(|&(tag, value)| harfrust::Variation { tag, value })
-        .collect();
-
-    let instance = if variations.is_empty() {
+    // Shaping and rasterization must use the same normalized variation location.
+    let instance = if metrics.location.coords().is_empty() {
         None
     } else {
-        Some(harfrust::ShaperInstance::from_variations(
-            font_ref, variations,
+        Some(harfrust::ShaperInstance::from_coords(
+            font_ref,
+            metrics.location.coords().iter().copied(),
         ))
     };
 

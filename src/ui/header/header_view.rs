@@ -53,7 +53,7 @@ pub fn header(
         action: None,
         search_rect: Rect::NOTHING,
         search_changed: false,
-        search_focused: false,
+        search_gained_focus: false,
     };
     Frame::new()
         .fill(palette.toolbar)

@@ -61,7 +61,9 @@ impl QuickNoteApp {
                             );
                         }
                         if response.clicked() {
-                            self.mode = mode;
+                            if self.mode != mode {
+                                self.command(Command::Preview, &context);
+                            }
                             self.focus_editor = mode == Mode::Edit;
                         }
                         if self.markdown_enabled {

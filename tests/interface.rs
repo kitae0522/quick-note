@@ -10,6 +10,16 @@ mod dialogs;
 mod editing;
 #[path = "interface/empty_note.rs"]
 mod empty_note;
+#[path = "interface/find_input.rs"]
+mod find_input;
+#[path = "interface/find_panel.rs"]
+mod find_panel;
+#[path = "interface/find_replace.rs"]
+mod find_replace;
+#[path = "interface/find_transitions.rs"]
+mod find_transitions;
+#[path = "interface/find_unicode.rs"]
+mod find_unicode;
 #[path = "interface/fixtures.rs"]
 mod fixtures;
 #[path = "interface/font_layout.rs"]
@@ -40,6 +50,8 @@ mod line_delete;
 mod localization;
 #[path = "interface/markdown.rs"]
 mod markdown;
+#[path = "interface/markdown_layout.rs"]
+mod markdown_layout;
 #[path = "interface/menu.rs"]
 mod menu;
 #[path = "interface/pair_fixture.rs"]
@@ -66,5 +78,7 @@ mod tab_drag;
 mod tab_input;
 #[path = "interface/tab_navigation.rs"]
 mod tab_navigation;
+#[path = "interface/typography.rs"]
+mod typography;
 #[path = "interface/window_drag.rs"]
 mod window_drag;

@@ -1,5 +1,9 @@
 mod command;
 mod dialogs;
+mod document_find;
+mod document_find_bar;
+mod document_find_inputs;
+mod document_find_state;
 mod document_view;
 mod file_actions;
 mod files;

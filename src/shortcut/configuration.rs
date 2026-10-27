@@ -54,12 +54,52 @@ impl Shortcuts {
         if bytes.len() as u64 > MAX_BYTES {
             return Err(i18n::message(|m| &m.error_shortcut_size).into());
         }
-        let supplied: Configuration = serde_json::from_slice(bytes)?;
+        let mut supplied: Configuration = serde_json::from_slice(bytes)?;
         if supplied.schema_version != 1 {
             return Err(i18n::message(|m| &m.error_shortcut_version).into());
         }
         let mut defaults: Configuration =
             serde_json::from_str(DEFAULTS).expect("bundled shortcut JSON is validated in tests");
+        if !supplied.bindings.contains_key("find_in_note")
+            && supplied
+                .bindings
+                .get("search_notes")
+                .is_some_and(|keys| keys == &["Primary+P", "Primary+F"])
+        {
+            // Retire the old default alias in memory without rewriting someone's configuration.
+            supplied
+                .bindings
+                .insert("search_notes".into(), vec!["Primary+P".into()]);
+        }
+        let mut configured = Vec::new();
+        for sources in supplied.bindings.values() {
+            for source in sources {
+                let keys = key::parse(source, platform)?;
+                configured.push(key::fingerprint(keys.logical_key, keys.modifiers, platform));
+            }
+        }
+        for id in [
+            "find_in_note",
+            "replace_in_note",
+            "find_next",
+            "find_previous",
+        ] {
+            if !supplied.bindings.contains_key(id) {
+                let sources = defaults
+                    .bindings
+                    .get_mut(id)
+                    .expect("new actions have bundled defaults");
+                sources.retain(|source| {
+                    let keys =
+                        key::parse(source, platform).expect("bundled shortcuts are validated");
+                    !configured.contains(&key::fingerprint(
+                        keys.logical_key,
+                        keys.modifiers,
+                        platform,
+                    ))
+                });
+            }
+        }
         for (id, keys) in supplied.bindings {
             if !ACTIONS.iter().any(|action| action.id == id) {
                 return Err(i18n::message(|m| &m.error_shortcut_action)
