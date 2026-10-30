@@ -104,7 +104,7 @@ try:
         app.command("final editor screenshot", "screenshot", name="after")
         checks.append("Options/help, focus cycle, Escape and appearance shortcuts work in a native window")
         kept = app.command("report current note", "report")
-        app.command("nonempty note still asks", key="w", command=True)
+        app.command("nonempty note still asks", key="backspace", command=True, shift=True)
         report = app.command("Cancel remains the default", key="enter")
         assert report["note_id"] == kept["note_id"] and report["pending_delete"] is None
         for blank_text in ["", " \t\n\u3000"]:
@@ -112,7 +112,7 @@ try:
             blank = report["note_id"]
             if blank_text:
                 app.command("whitespace only", "text", text=blank_text)
-            report = app.command("delete blank without confirmation", key="w", command=True)
+            report = app.command("delete blank without confirmation", key="backspace", command=True, shift=True)
             assert report["pending_delete"] is None and db_note(data, blank) is None
             assert report["note_id"] == kept["note_id"] and report["body"] == kept["body"]
             assert report["editor_focused"]

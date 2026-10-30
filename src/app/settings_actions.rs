@@ -12,6 +12,7 @@ impl QuickNoteApp {
     pub(super) fn settings_actions(&mut self, ui: &mut Ui) {
         let palette = self.theme.palette();
         let mut operation = None;
+        let mut command = None;
         ui.strong(self.locale.text().settings_themes.as_str());
         ui.horizontal_wrapped(|ui| {
             for (label, action) in [
@@ -55,6 +56,22 @@ impl QuickNoteApp {
                 }
             }
         });
+        ui.horizontal_wrapped(|ui| {
+            for (label, action) in [
+                (
+                    &self.locale.text().recently_deleted,
+                    crate::shortcut::Command::Trash,
+                ),
+                (
+                    &self.locale.text().delete_note,
+                    crate::shortcut::Command::Delete,
+                ),
+            ] {
+                if ui.button(label.as_str()).clicked() {
+                    command = Some(action);
+                }
+            }
+        });
         ui.add_space(16.0);
         let response = ui.button(self.locale.text().keyboard_shortcuts.as_str());
         ui::focus_ring(ui, &response, palette);
@@ -63,6 +80,9 @@ impl QuickNoteApp {
         }
         ui.add_space(16.0);
         ui.weak(self.locale.text().utf8_notice.as_str());
+        if let Some(command) = command {
+            self.command(command, ui.ctx());
+        }
         if let Some(operation) = operation {
             self.theme_action(operation, ui.ctx());
         }

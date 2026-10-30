@@ -61,25 +61,31 @@ impl QuickNoteApp {
         let _ = context;
     }
 
-    pub(super) fn receive_menu(&mut self, context: &Context) {
+    pub(super) fn receive_menu(&mut self, context: &Context, defer_edit: bool) {
         #[cfg(target_os = "macos")]
         if let Some(menu) = &self.native_menu {
             self.pending_menu.extend(menu.receive());
         }
         // Let TextEdit finish an IME commit before a menu can switch or delete its note.
-        if context.input(|input| {
-            input
-                .events
-                .iter()
-                .any(|event| matches!(event, Event::Ime(_)))
-        }) {
+        if self.composing
+            || context.input(|input| {
+                input
+                    .events
+                    .iter()
+                    .any(|event| matches!(event, Event::Ime(_)))
+            })
+        {
             if !self.pending_menu.is_empty() {
                 context.request_repaint();
             }
             return;
         }
         for action in std::mem::take(&mut self.pending_menu) {
-            self.perform_menu_action(action, context);
+            if defer_edit && matches!(action, MenuAction::Edit(_)) {
+                self.pending_menu.push(action);
+            } else {
+                self.perform_menu_action(action, context);
+            }
         }
     }
 
@@ -115,7 +121,23 @@ impl QuickNoteApp {
             MenuAction::Hide | MenuAction::HideOthers | MenuAction::ShowAll => {
                 crate::menu::MacMenu::visibility(action)
             }
-            MenuAction::App(command) => self.command(command, context),
+            MenuAction::OpenNote(id) => {
+                if let Err(error) = self.select_note(&id, crate::ui::FocusTarget::Editor) {
+                    self.error = Some(error);
+                }
+                self.expand_capture(context);
+                Self::show_window(context);
+            }
+            MenuAction::App(command) => {
+                if command != crate::shortcut::Command::CaptureClipboard {
+                    Self::show_window(context);
+                }
+                if command == crate::shortcut::Command::Capture {
+                    self.toggle_capture(context, false);
+                } else {
+                    self.command(command, context);
+                }
+            }
             MenuAction::Fonts => {
                 self.open_settings(SettingsSection::Fonts, context);
                 self.open_font_options(context);

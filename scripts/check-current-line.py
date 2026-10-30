@@ -73,7 +73,7 @@ try:
         report = app.command("new empty draft", key="n", command=True)
         assert report["body"] == "" and line(report) == 1 and report["editor_focused"]
         app.command("empty draft current line", "screenshot", name="line-1-empty")
-        app.command("delete empty fixture", key="w", command=True)
+        app.command("delete empty fixture", key="backspace", command=True, shift=True)
         checks.append("A fresh empty draft has a focused first line")
         app.close()
         app = None

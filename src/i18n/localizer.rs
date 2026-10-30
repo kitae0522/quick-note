@@ -1,11 +1,10 @@
 //! UTF-8 catalogs have typed fields and identical placeholder contracts.
 use super::Language;
 use super::Messages;
+use super::catalog_validation;
 use super::message;
-use super::template;
 use crate::storage::Result;
 use serde_json::Value;
-use std::collections::BTreeMap;
 use std::error::Error;
 use std::fs;
 use std::path::Path;
@@ -52,30 +51,7 @@ impl Localizer {
         let text: Messages = serde_json::from_slice(bytes)?;
         let reference = serde_json::to_value(english())?;
         let candidate = serde_json::to_value(&text)?;
-        for (key, expected) in reference
-            .as_object()
-            .expect("Messages serialize to an object")
-        {
-            if candidate[key]
-                .as_str()
-                .expect("message is a string")
-                .trim()
-                .is_empty()
-            {
-                return Err(message(|m| &m.error_locale_empty).arg("key", key).into());
-            }
-            let expected = template::fields(expected.as_str().expect("message is a string"))?;
-            let actual = template::fields(candidate[key].as_str().expect("message is a string"))?;
-            if actual != expected {
-                return Err(message(|m| &m.error_locale_placeholders)
-                    .arg("key", key)
-                    .arg(
-                        "expected",
-                        expected.into_iter().collect::<Vec<_>>().join(", "),
-                    )
-                    .into());
-            }
-        }
+        catalog_validation::validate(&reference, &candidate, "")?;
         Ok(Self { language, text })
     }
 
@@ -104,11 +80,9 @@ impl Localizer {
     }
 
     fn decode_override(language: Language, bytes: &[u8]) -> Result<Self> {
-        let supplied: BTreeMap<String, Value> = serde_json::from_slice(bytes)?;
+        let supplied: Value = serde_json::from_slice(bytes)?;
         let mut base = serde_json::to_value(Self::bundled(language)?.text())?;
-        base.as_object_mut()
-            .expect("Messages serialize to an object")
-            .extend(supplied);
+        catalog_validation::merge(&mut base, supplied);
         Self::decode(language, &serde_json::to_vec(&base)?)
     }
 

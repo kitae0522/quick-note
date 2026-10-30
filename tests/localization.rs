@@ -130,3 +130,24 @@ fn failed_language_save_preserves_the_current_language_and_note() -> Result<()> 
     assert_eq!(app.note.id, id);
     Ok(())
 }
+
+#[test]
+fn nested_overrides_inherit_defaults_and_validate_each_leaf() -> Result<()> {
+    let directory = tempfile::tempdir()?;
+    fs::create_dir(directory.path().join("i18n"))?;
+    let path = directory.path().join("i18n/ko.json");
+    fs::write(&path, r#"{"capture":{"new_note":"빠른 기록"}}"#)?;
+    let locale = Localizer::load(Language::Korean, directory.path())?;
+    assert_eq!(locale.text().capture.new_note, "빠른 기록");
+    assert_eq!(locale.text().capture.clipboard, "클립보드를 메모로 저장");
+    for invalid in [
+        r#"{"capture":{"new_note":" "}}"#,
+        r#"{"capture":{"clipboard_saved":"{wrong}"}}"#,
+        r#"{"capture":{"unknown":"value"}}"#,
+        r#"{"capture":"value"}"#,
+    ] {
+        fs::write(&path, invalid)?;
+        assert!(Localizer::load(Language::Korean, directory.path()).is_err());
+    }
+    Ok(())
+}

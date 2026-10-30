@@ -36,7 +36,7 @@ fn a_thousand_tabs_and_results_remain_reachable_by_keyboard() -> Result<()> {
     harness.run();
     assert_eq!(harness.state().note.id, "999");
     assert!(harness.get_by_label("Idea 0999").is_focused());
-    let close = harness.get_by_label("Delete Idea 0999").rect();
+    let close = harness.get_by_label("Close Idea 0999").rect();
     assert!(close.right() <= harness.get_by_label("New note").rect().left());
     harness.key_press(Key::Home);
     harness.run();

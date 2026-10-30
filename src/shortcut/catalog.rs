@@ -14,7 +14,17 @@ const fn action(id: &'static str, command: Command, label: fn(&Messages) -> &str
 
 pub(crate) const ACTIONS: &[Action] = &[
     action("new_note", Command::New, |m| &m.new_note),
+    action("close_tab", Command::CloseTab, |m| &m.close_note),
+    action("recently_deleted", Command::Trash, |m| &m.recently_deleted),
+    action("new_capture", Command::NewCapture, |m| &m.capture.new_note),
+    action("capture_clipboard", Command::CaptureClipboard, |m| {
+        &m.capture.clipboard
+    }),
+    action("quick_capture", Command::Capture, |m| &m.quick_capture),
+    action("focus_mode", Command::FocusMode, |m| &m.focus_mode),
+    action("pin_window", Command::PinWindow, |m| &m.pin_window),
     action("delete_note", Command::Delete, |m| &m.shortcut_delete),
+    action("quit_app", Command::Quit, |m| &m.shortcut_quit),
     action("close_window", Command::Close, |m| &m.shortcut_close),
     action("search_notes", Command::Search, |m| &m.find_note),
     action("find_in_note", Command::Find, |m| &m.find_in_note),

@@ -42,6 +42,19 @@ is never rewritten. Custom assignments retain priority over newly added default 
 `move_tab_left` and `move_tab_right` reorder the current tab; `previous_note` and
 `next_note` switch notes in that order. The default reorder keys are Ctrl+Shift+PageUp
 and Ctrl+Shift+PageDown on both platforms.
+`close_tab` now uses Primary+W and retains the note; `delete_note` uses
+Primary+Shift+Backspace. Exact legacy defaults for deletion and window closing
+migrate in memory, without rewriting the existing JSON. `quit_app` is separate from
+`close_window`. Explicit custom assignments keep priority over new defaults.
+
+`quick_capture` registers a system-wide shortcut while the app runs, defaulting to
+Primary+Alt+N. `new_capture` opens an empty capture with Primary+Alt+Shift+N;
+`capture_clipboard` saves copied text with Primary+Alt+V. An empty array disables
+that action's global binding. Registration conflicts show an error;
+a failed registration during reload retains the previous shortcuts.
+`focus_mode` defaults to Primary+Shift+F. `recently_deleted` and `pin_window` have
+no default keys and can be assigned here.
+
 There can be at most eight combinations per action and 64 KB per file. Conflicts are
 checked after resolving platform aliases, so Ctrl and Primary are the same on Windows.
 Unknown actions, keys, duplicate assignments and malformed files are rejected together.

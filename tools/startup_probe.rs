@@ -63,6 +63,8 @@ fn main() -> eframe::Result {
             probe::stamp(&phases, "gpu_ready_ms", started);
             app.configure(&creation.egui_ctx);
             app.install_menu(&creation.egui_ctx);
+            app.install_capture(&creation.egui_ctx);
+            app.install_resident(&creation.egui_ctx);
             probe::stamp(&phases, "configured_ms", started);
             let (sender, receiver) = mpsc::channel();
             Ok(Box::new(StartupProbe {

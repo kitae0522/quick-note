@@ -12,6 +12,8 @@ impl QuickNoteApp {
     }
 
     pub(super) fn open_settings(&mut self, section: SettingsSection, context: &Context) {
+        #[cfg(target_os = "macos")]
+        self.refresh_login_item();
         self.document_find.close();
         if self.settings.is_some() {
             self.settings = Some(section);

@@ -82,3 +82,11 @@ mod tab_navigation;
 mod typography;
 #[path = "interface/window_drag.rs"]
 mod window_drag;
+
+#[path = "interface/quick_flow.rs"]
+mod quick_flow;
+
+#[path = "interface/capture.rs"]
+mod capture;
+#[path = "interface/instant_capture.rs"]
+mod instant_capture;

@@ -5,6 +5,10 @@ mod action;
 mod builder;
 #[cfg(target_os = "macos")]
 mod mac_menu;
+#[cfg(target_os = "macos")]
+mod menu_items;
+#[cfg(target_os = "macos")]
+mod resident_menu;
 
 pub use action::EditCommand;
 pub use action::MenuAction;

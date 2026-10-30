@@ -2,10 +2,8 @@
 use super::Result;
 use super::note_row;
 use super::schema;
-use super::tab_order;
 use crate::i18n;
 use crate::model::Note;
-use crate::model::NoteSummary;
 use rusqlite::Connection;
 use rusqlite::OptionalExtension;
 use rusqlite::params;
@@ -17,7 +15,7 @@ pub struct Store {
 }
 
 impl Store {
-    /// Opens a UTF-8 store, preserving a backup before migrating schema version one.
+    /// Opens a UTF-8 store, preserving a backup before migrating an existing older schema.
     pub fn try_new(path: &Path) -> Result<Self> {
         Ok(Self {
             connection: schema::open_connection(path)?,
@@ -42,7 +40,7 @@ impl Store {
             .connection
             .query_row(
                 "SELECT id, body, created_at, updated_at, \
-                selection_location, selection_length FROM notes WHERE id = ?1",
+                selection_location, selection_length FROM notes WHERE id = ?1 AND deleted_at IS NULL",
                 [id],
                 note_row::read_note,
             )
@@ -53,36 +51,11 @@ impl Store {
         let mut statement = self.connection.prepare_cached(
             "SELECT id, body, \
                 created_at, updated_at, selection_location, selection_length FROM \
-                notes ORDER BY updated_at DESC, rowid DESC",
+                notes WHERE deleted_at IS NULL ORDER BY updated_at DESC, rowid DESC",
         )?;
         Ok(statement
             .query_map([], note_row::read_note)?
             .collect::<rusqlite::Result<_>>()?)
-    }
-
-    pub fn summaries(&self) -> Result<Vec<NoteSummary>> {
-        let mut statement = self.connection.prepare_cached(
-            "SELECT id, title, updated_at, CASE WHEN title = 'Untitled' THEN body END \
-                FROM notes ORDER BY created_at, rowid",
-        )?;
-        let mut summaries: Vec<NoteSummary> = statement
-            .query_map([], |row| {
-                Ok(NoteSummary {
-                    id: row.get(0)?,
-                    title: row.get(1)?,
-                    updated_at: row.get(2)?,
-                    is_blank: row
-                        .get::<_, Option<String>>(3)?
-                        .is_some_and(|body| body.trim().is_empty()),
-                })
-            })?
-            .collect::<rusqlite::Result<_>>()?;
-        let positions = tab_order::positions(&self.connection)?;
-        if !positions.is_empty() {
-            summaries
-                .sort_by_cached_key(|note| positions.get(&note.id).copied().unwrap_or(usize::MAX));
-        }
-        Ok(summaries)
     }
 
     pub fn create_note(&mut self) -> Result<Note> {
@@ -96,7 +69,17 @@ impl Store {
         let note = self
             .note(id)?
             .ok_or(i18n::message(|m| &m.error_note_missing))?;
-        self.set_setting("activeNote", id)?;
+        let transaction = self.connection.transaction()?;
+        transaction.execute(
+            "UPDATE notes SET closed = 0 WHERE id = ?1 AND closed != 0",
+            [id],
+        )?;
+        transaction.execute(
+            "INSERT INTO app_state (key, value) VALUES ('activeNote', ?1) \
+            ON CONFLICT(key) DO UPDATE SET value=excluded.value",
+            [id],
+        )?;
+        transaction.commit()?;
         Ok(note)
     }
 
@@ -108,7 +91,7 @@ impl Store {
             .prepare_cached(
                 "UPDATE notes SET body = ?1, \
                 title = ?2, updated_at = ?3, selection_location = ?4, \
-                selection_length = ?5 WHERE id = ?6",
+                selection_length = ?5 WHERE id = ?6 AND deleted_at IS NULL",
             )?
             .execute(params![
                 note.body,
@@ -129,7 +112,7 @@ impl Store {
         let changed = self
             .connection
             .prepare_cached(
-                "UPDATE notes SET selection_location = ?1, selection_length = ?2 WHERE id = ?3",
+                "UPDATE notes SET selection_location = ?1, selection_length = ?2 WHERE id = ?3 AND deleted_at IS NULL",
             )?
             .execute(params![
                 selection.location as i64,
@@ -140,46 +123,6 @@ impl Store {
             return Err(i18n::message(|m| &m.error_note_missing_save).into());
         }
         Ok(())
-    }
-
-    /// Applies an approved deletion; deleting the final note creates a blank draft atomically.
-    pub fn delete_confirmed(&mut self, id: &str) -> Result<Note> {
-        let transaction = self.connection.transaction()?;
-        let old_active: Option<String> = transaction
-            .query_row(
-                "SELECT value FROM app_state WHERE key = 'activeNote'",
-                [],
-                |row| row.get(0),
-            )
-            .optional()?;
-        let ids = tab_order::ordered_ids(&transaction)?;
-        let index = ids
-            .iter()
-            .position(|value| value == id)
-            .ok_or(i18n::message(|m| &m.error_note_missing_delete))?;
-        transaction.execute("DELETE FROM notes WHERE id = ?1", [id])?;
-        let remaining: Vec<_> = ids.into_iter().filter(|value| value != id).collect();
-        let note = if remaining.is_empty() {
-            note_row::insert_note(&transaction)?
-        } else {
-            let next = old_active
-                .filter(|active| active != id && remaining.contains(active))
-                .unwrap_or_else(|| remaining[index.min(remaining.len() - 1)].clone());
-            transaction.execute(
-                "INSERT INTO app_state (key, value) VALUES \
-                    ('activeNote', ?1) ON CONFLICT(key) DO UPDATE SET \
-                    value=excluded.value",
-                [&next],
-            )?;
-            transaction.query_row(
-                "SELECT id, body, created_at, updated_at, \
-                    selection_location, selection_length FROM notes WHERE id = ?1",
-                [next],
-                note_row::read_note,
-            )?
-        };
-        transaction.commit()?;
-        Ok(note)
     }
 
     pub fn setting(&self, key: &str) -> Result<Option<String>> {

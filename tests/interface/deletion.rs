@@ -8,7 +8,7 @@ use quick_note::storage::Result;
 use quick_note::ui::FocusTarget;
 
 #[test]
-fn command_w_deletes_empty_and_whitespace_notes_without_confirmation() -> Result<()> {
+fn explicit_delete_deletes_empty_and_whitespace_notes_without_confirmation() -> Result<()> {
     let (_directory, app) = fixtures::fixture()?;
     let mut harness = fixtures::harness(app, [920.0, 600.0]);
     harness.run();
@@ -27,7 +27,7 @@ fn command_w_deletes_empty_and_whitespace_notes_without_confirmation() -> Result
             harness.run();
         }
         let id = harness.state().note.id.clone();
-        harness.key_press_modifiers(Modifiers::COMMAND, Key::W);
+        harness.key_press_modifiers(Modifiers::COMMAND | Modifiers::SHIFT, Key::Backspace);
         harness.run();
         assert!(harness.state().pending_delete.is_none());
         assert!(harness.state().store.note(&id)?.is_none());
@@ -55,7 +55,7 @@ fn deleting_the_final_empty_note_leaves_a_fresh_editable_draft() -> Result<()> {
     let id = app.note.id.clone();
     let mut harness = fixtures::harness(app, [920.0, 600.0]);
     harness.run();
-    harness.key_press_modifiers(Modifiers::COMMAND, Key::W);
+    harness.key_press_modifiers(Modifiers::COMMAND | Modifiers::SHIFT, Key::Backspace);
     harness.run();
     assert!(harness.state().pending_delete.is_none());
     assert!(harness.state().store.note(&id)?.is_none());
@@ -90,7 +90,7 @@ fn a_stored_empty_note_with_unsaved_text_still_requires_confirmation() -> Result
             .body
             .is_empty()
     );
-    harness.key_press_modifiers(Modifiers::COMMAND, Key::W);
+    harness.key_press_modifiers(Modifiers::COMMAND | Modifiers::SHIFT, Key::Backspace);
     harness.run();
     assert_eq!(harness.state().pending_delete.as_deref(), Some(id.as_str()));
     harness.key_press(Key::Escape);
@@ -109,10 +109,10 @@ fn closing_an_inactive_empty_tab_preserves_the_current_note() -> Result<()> {
     app.select_note(&active, FocusTarget::Editor)?;
     let mut harness = fixtures::harness(app, [920.0, 600.0]);
     harness.run();
-    harness.get_by_label("Delete Untitled").click();
+    harness.get_by_label("Close Untitled").click();
     harness.run();
     assert!(harness.state().pending_delete.is_none());
-    assert!(harness.state().store.note(&blank)?.is_none());
+    assert!(harness.state().store.note(&blank)?.is_some());
     assert_eq!(harness.state().note.id, active);
     Ok(())
 }

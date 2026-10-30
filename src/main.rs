@@ -37,6 +37,8 @@ fn main() -> eframe::Result {
         Box::new(move |context| {
             app.configure(&context.egui_ctx);
             app.install_menu(&context.egui_ctx);
+            app.install_capture(&context.egui_ctx);
+            app.install_resident(&context.egui_ctx);
             Ok(Box::new(app))
         }),
     )

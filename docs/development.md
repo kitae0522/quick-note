@@ -56,6 +56,8 @@ the MSVC package. These automated checks do not verify physical input or screen 
 ./scripts/check.sh
 python3 scripts/check-ui.py        # a GUI session on macOS is required
 python3 scripts/check-menu.py      # actual AppKit menus and native key equivalents
+python3 scripts/check-quick-capture.py
+python3 scripts/check-instant-capture.py # compact window, retained tabs, trash, search and safe hide
 python3 scripts/check-input.py     # canvas, keyboard and Korean IME event replays
 python3 scripts/check-find.py      # current-note search, literal replacements, undo and restart
 python3 scripts/check-appkit-input.py # native AppKit dispatch, drag separation and input after drag
@@ -81,6 +83,12 @@ The offscreen examples render production widgets with fixture notes. They exclud
 AppKit traffic lights, physical input and screen-reader speech. Motion samples use
 simulated UI time; they are not an OS screen recording. Tests also inspect names,
 roles, focus pixels, 200% zoom and keyboard input during a running transition.
+
+The quick-capture check registers the real OS hotkey and exercises the native window
+with scripted egui input and AppKit menu actions. It checks retained tabs, restore,
+UTF-16 search selection and refusing to hide after a failed save. It does not deliver
+a physical global shortcut from another app. Verify that path, Dock reopening and
+real IME commits manually on a GUI Mac. Every fixture uses its own temporary data.
 
 The macOS input backend carries focused fixes for pending Korean commits, duplicate
 native callbacks, stale composition after focus changes and first-key fallback.
@@ -150,7 +158,9 @@ and runs as part of the Mac checks. See Apple's [CPU counter test](https://githu
 
 Tabs, search results and Markdown render the visible portion of their scroll areas.
 Search normalization, logical-line cursor indices and font filtering are reused
-until their inputs change. Markdown still lays out the full document on its first
+until their inputs change. Editing invalidates only that note's search entry;
+normalization waits until the next query. Empty search uses note metadata, and only
+visible result rows load excerpts. Markdown still lays out the full document on its first
 view or after invalidation; subsequent redraws use the viewport cache. Immediate
 SQLite saves retain `synchronous=FULL` and macOS `fullfsync`.
 
@@ -159,3 +169,11 @@ discarded. It compares ON/OFF before Preview and after returning from Preview,
 using two 5-second samples per setting after warmup. This is a controlled redraw
 workload, not idle CPU usage. Check foreground samples and run-to-run variation
 before attributing small differences to the setting.
+
+The instant-capture check uses isolated notes and restores every clipboard item and
+representation after testing. It invokes the actual AppKit status-menu items with
+focus helpers disabled, including clipboard capture while the app is hidden. The
+diagnostic build retains the same native menu for inspection and action dispatch,
+restoring the application menu before returning control to AppKit. Production has
+no diagnostic menu access. Physical OS hotkey delivery and
+login/logout behavior require separate checks. Tests never register a login item.

@@ -7,13 +7,19 @@
 | Action | macOS | Windows |
 | --- | --- | --- |
 | New note | Cmd+N | Ctrl+N |
+| Quick capture while running | Cmd+Option+N | Ctrl+Alt+N |
+| New quick note | Cmd+Option+Shift+N | Ctrl+Alt+Shift+N |
+| Save clipboard as note | Cmd+Option+V | Ctrl+Alt+V |
 | Search all notes | Cmd+P | Ctrl+P |
 | Find in current note | Cmd+F | Ctrl+F |
 | Replace in current note | Cmd+Option+F | Ctrl+Alt+F |
 | Next / previous match | Cmd+G / Cmd+Shift+G | Ctrl+G / Ctrl+Shift+G |
 | Edit / Markdown preview | Cmd+Shift+M | Ctrl+Shift+M |
-| Delete current note · confirms when nonempty | Cmd+W | Ctrl+W |
+| Close tab, keeping the note | Cmd+W | Ctrl+W |
+| Delete current note · confirms when nonempty | Cmd+Shift+Backspace | Ctrl+Shift+Backspace |
+| Toggle Focus mode | Cmd+Shift+F | Ctrl+Shift+F |
 | Close the window, keeping notes | Cmd+Shift+W | Ctrl+Shift+W |
+| Quit | Cmd+Q | Ctrl+Q |
 | Next / previous note | Ctrl+Tab / Ctrl+Shift+Tab | Ctrl+Tab / Ctrl+Shift+Tab |
 | Move current tab left / right | Ctrl+Shift+PageUp / PageDown | Ctrl+Shift+PageUp / PageDown |
 | Settings | Cmd+, | Ctrl+, |
@@ -77,14 +83,52 @@ motion** makes transitions instant. The desktop's reduced-motion preference take
 priority and refreshes when the window regains focus. The first editor frame appears
 without an entrance animation, and theme changes apply immediately.
 
-Empty notes, including whitespace-only notes, delete immediately. Notes with content
-show a confirmation with **Cancel** selected. Deleting the final note creates a fresh
-blank draft in the same transaction.
-Closing the window or quitting preserves all notes.
+Closing a tab preserves its note. Search includes closed notes and reopens them.
+Explicit deletion moves a note to **Recently deleted**; nonempty notes first show a
+confirmation with **Cancel** selected. The search selector, File menu and Settings
+open Recently deleted. Selecting a result restores its original ID, text and cursor.
+There is no automatic purge. Closing or deleting the final tab creates a blank draft
+in the same transaction. Closing the window or quitting preserves all notes.
 
-Search matches titles and note text, ignoring letter case. Markdown supports
+Search matches titles and note text, ignoring letter case. Results show a matching
+excerpt, highlight and relative edit time; opening one selects its first match.
+An empty query lists the library without reading every note body. Markdown supports
 headings, lists, tables, links, emphasis and code blocks. Code blocks have a Copy
 button and use the theme's text color. Remote images and executable HTML are not loaded.
+
+## Quick capture and Focus mode
+
+While Quick Note is running, Cmd+Option+N on macOS or Ctrl+Alt+N on Windows opens a
+520 × 340 capture window from another app. It resumes the current note and cursor;
+Cmd/Ctrl+N starts a new note. Esc closes an open panel first, then saves and hides the
+capture window. A failed save keeps the window visible with recovery actions.
+**Expand** restores the previous window size and position.
+
+The compact header includes search, new note and **Note actions**. Focus mode uses
+the same quiet header in the full-size window and hides the gutter and status bar.
+F6 moves between the editor and header controls in either mode. **Pin window** keeps
+the window above other apps. Focus and pin settings last for the current session.
+
+**New quick note** (Cmd+Option+Shift+N / Ctrl+Alt+Shift+N) opens an empty capture.
+No database row is created until its first input. Esc on an unused capture returns
+to the previous note and cursor. The compact header's plus button uses this same path.
+**Save clipboard as note** (Cmd+Option+V / Ctrl+Alt+V) saves copied text as a closed
+note without switching your current app or note. On macOS, a brief checkmark in the
+status menu confirms the save. Empty or non-text clipboards show a notice; a failed
+write keeps the captured text in a recovery copy and opens the editor for retry.
+
+The macOS status menu offers new capture, resume, clipboard capture and the five
+most recently saved notes, including closed notes. With that menu available or a
+global shortcut registered, closing the window hides Quick Note. Cmd/Ctrl+Q quits.
+On Windows, disabling every global capture binding restores quit-on-close behavior.
+Shortcut changes update registration without restarting the app; failed reloads
+retain the previous working bindings.
+
+**Settings → Open at login** is optional and available when running Quick Note.app
+on macOS. It reads the system's actual registration state. If macOS requires
+approval, follow **Open Login Items settings**; the checkbox does not claim the app
+is enabled until approval is granted. Turning it off unregisters the app. Running
+an unbundled development executable does not offer login registration.
 
 ## Storage and recovery
 
@@ -102,8 +146,10 @@ copy against its saved revision, without replacing a later successful save.
 If both writes fail, keep the window open and use **Export text…**. A second app
 cannot edit the same folder concurrently.
 
-The original schema is migrated without changing note IDs or text. Before migration,
-Quick Note writes `notes.v1-backup.sqlite3`. It refuses corrupt databases and newer
+Schema v3 adds tab visibility and recoverable deletion without changing note IDs,
+UTF-8 text or UTF-16 cursors. Before migrating an existing v1 or v2 database,
+Quick Note writes `notes.v1-backup.sqlite3` or `notes.v2-backup.sqlite3`, respectively.
+The migration runs in one transaction. It refuses corrupt databases and newer
 schema versions rather than replacing them. Quit the app and copy the entire data
 folder to make your own backup.
 

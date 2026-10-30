@@ -99,7 +99,7 @@ fn menus_respect_disabled_preview_and_confirmation_and_settings_delete_policy() 
     assert!(harness.state().settings_open());
     harness
         .state_mut()
-        .queue_menu_action(MenuAction::App(Command::Delete), &context);
+        .queue_menu_action(MenuAction::App(Command::CloseTab), &context);
     harness.run();
     assert!(!harness.state().settings_open());
     assert_eq!(harness.state().note.id, original);

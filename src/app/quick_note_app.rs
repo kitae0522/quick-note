@@ -1,5 +1,6 @@
 //! Native application state, construction and framework integration.
 use super::Mode;
+use super::capture_state::CaptureState;
 use super::document_find_state::DocumentFind;
 use super::files;
 use super::settings_section::SettingsSection;
@@ -10,6 +11,7 @@ use crate::model::CursorLocation;
 use crate::model::Note;
 use crate::model::NoteSummary;
 use crate::model::SearchIndex;
+use crate::model::SearchPreview;
 use crate::shortcut::Platform;
 use crate::shortcut::Shortcuts;
 use crate::storage::Result;
@@ -18,17 +20,16 @@ use crate::ui::EditorMetrics;
 use crate::ui::header::HeaderState;
 use eframe::egui::Context;
 use eframe::egui::Id;
-use eframe::egui::Rangef;
 use eframe::egui::Rect;
-use eframe::egui::Ui;
-use eframe::egui::Visuals;
 use egui_commonmark::CommonMarkCache;
+use std::collections::HashMap;
 use std::fs;
 use std::path::PathBuf;
 
 /// Owns one locked note store and its native-window interaction state.
 pub struct QuickNoteApp {
     pub store: Store,
+    pub(super) capture: CaptureState,
     pub note: Note,
     pub tabs: Vec<NoteSummary>,
     pub theme: Theme,
@@ -59,6 +60,8 @@ pub struct QuickNoteApp {
     pub(super) location: CursorLocation,
     pub(super) document_find: DocumentFind,
     pub(super) search_open: bool,
+    pub(super) search_deleted: bool,
+    pub(super) search_previews: HashMap<String, SearchPreview>,
     pub(super) search_focus_popup: bool,
     pub(super) search_results: Vec<NoteSummary>,
     pub(super) search_cache: Option<SearchIndex>,
@@ -141,6 +144,7 @@ impl QuickNoteApp {
         let location = editor_metrics.lines().location(&note.body, caret);
         let mut app = Self {
             store,
+            capture: CaptureState::default(),
             locale,
             note,
             tabs,
@@ -174,6 +178,8 @@ impl QuickNoteApp {
             location,
             document_find: DocumentFind::default(),
             search_open: false,
+            search_deleted: false,
+            search_previews: HashMap::new(),
             search_focus_popup: false,
             search_results: Vec::new(),
             search_cache: None,
@@ -213,19 +219,5 @@ impl QuickNoteApp {
         self.theme.apply(context);
         self.apply_language(context);
         self.configure_motion(context);
-    }
-}
-
-impl eframe::App for QuickNoteApp {
-    fn ui(&mut self, ui: &mut Ui, frame: &mut eframe::Frame) {
-        frame.set_traffic_lights_position(
-            ui.ctx(),
-            Rangef::new(0.0, self.theme.layout.toolbar_height),
-            12.0,
-        );
-        self.show(ui);
-    }
-    fn clear_color(&self, _visuals: &Visuals) -> [f32; 4] {
-        self.theme.palette().background.to_normalized_gamma_f32()
     }
 }

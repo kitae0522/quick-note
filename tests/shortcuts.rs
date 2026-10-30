@@ -33,7 +33,7 @@ fn portable_defaults_and_overrides_use_exact_modifiers_aliases_and_disabled_acti
         );
         assert_eq!(
             press(&defaults, Key::W, Modifiers::COMMAND),
-            Some(Command::Delete)
+            Some(Command::CloseTab)
         );
         assert_eq!(
             press(&defaults, Key::W, Modifiers::COMMAND | Modifiers::SHIFT),
@@ -61,12 +61,12 @@ fn portable_defaults_and_overrides_use_exact_modifiers_aliases_and_disabled_acti
                 Key::N,
                 Modifiers::COMMAND | Modifiers::SHIFT | Modifiers::ALT
             ),
-            None
+            Some(Command::NewCapture)
         );
         assert_eq!(press(&custom, Key::S, Modifiers::COMMAND), None);
         assert_eq!(
             press(&custom, Key::W, Modifiers::COMMAND),
-            Some(Command::Delete)
+            Some(Command::CloseTab)
         );
     }
     Ok(())
@@ -77,7 +77,7 @@ fn invalid_keys_actions_conflicts_and_documents_are_rejected_before_dispatch() {
     for source in [
         r#"{"schemaVersion":2,"bindings":{}}"#,
         r#"{"schemaVersion":1,"bindings":{"not_an_action":[]}}"#,
-        r#"{"schemaVersion":1,"bindings":{"new_note":["Primary+W"]}}"#,
+        r#"{"schemaVersion":1,"bindings":{"new_note":["Primary+W"],"close_tab":["Primary+W"]}}"#,
         r#"{"schemaVersion":1,"bindings":{"new_note":["Primary+N","Primary+N"]}}"#,
         r#"{"schemaVersion":1,"bindings":{"new_note":["Primary+Primary+N"]}}"#,
         r#"{"schemaVersion":1,"bindings":{"new_note":["Super+NoSuchKey"]}}"#,
@@ -129,5 +129,42 @@ fn physical_modifier_aliases_conflict_on_the_platform_where_they_are_identical()
     fs::write(&path, invalid)?;
     assert!(Shortcuts::load(directory.path(), Platform::Mac).is_err());
     assert_eq!(fs::read(path)?, invalid);
+    Ok(())
+}
+
+#[test]
+fn old_defaults_migrate_without_rewriting_custom_shortcut_files() -> Result<()> {
+    let directory = tempfile::tempdir()?;
+    fs::create_dir(directory.path().join("shortcut"))?;
+    let path = directory.path().join("shortcut/bindings.json");
+    let original = r#"{"schemaVersion":1,"bindings":{"delete_note":["Primary+W"],"close_window":["Primary+Shift+W","Primary+Q"]}}"#;
+    fs::write(&path, original)?;
+    let shortcuts = Shortcuts::load(directory.path(), Platform::Mac)?;
+    assert_eq!(
+        press(&shortcuts, Key::W, Modifiers::COMMAND),
+        Some(Command::CloseTab)
+    );
+    assert_eq!(
+        press(&shortcuts, Key::Q, Modifiers::COMMAND),
+        Some(Command::Quit)
+    );
+    assert_eq!(
+        press(
+            &shortcuts,
+            Key::Backspace,
+            Modifiers::COMMAND | Modifiers::SHIFT
+        ),
+        Some(Command::Delete)
+    );
+    assert_eq!(fs::read_to_string(&path)?, original);
+    let custom = Shortcuts::from_bytes(br#"{"schemaVersion":1,"bindings":{"new_note":["Primary+Alt+N"],"delete_note":["Primary+D"]}}"#, Platform::Mac)?;
+    assert_eq!(
+        press(&custom, Key::N, Modifiers::COMMAND | Modifiers::ALT),
+        Some(Command::New)
+    );
+    assert_eq!(
+        press(&custom, Key::D, Modifiers::COMMAND),
+        Some(Command::Delete)
+    );
     Ok(())
 }

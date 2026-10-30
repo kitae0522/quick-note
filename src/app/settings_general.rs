@@ -83,6 +83,9 @@ impl QuickNoteApp {
         });
         self.markdown_option(ui);
         self.motion_option(ui);
+        self.capture_options(ui);
+        #[cfg(target_os = "macos")]
+        self.login_option(ui);
         ui.add_space(16.0);
         self.settings_actions(ui);
         if let Some(language) = language_choice

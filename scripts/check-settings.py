@@ -76,9 +76,9 @@ try:
         report = app.command("close settings over blank draft", key="w", command=True)
         assert report["note_id"] == blank_id and db_note(data, blank_id) is not None
         assert report["pending_delete"] is None and len(report["tabs"]) == 2
-        report = app.command("delete blank draft from editor", key="w", command=True)
+        report = app.command("delete blank draft from editor", key="backspace", command=True, shift=True)
         assert db_note(data, blank_id) is None and db_note(data, note_id)[0] == body
-        checks.append("Cmd W in settings keeps blank notes; Cmd W in the editor retains the existing deletion behavior")
+        checks.append("Cmd W in settings keeps blank notes; explicit Cmd Shift Backspace deletes the blank draft")
         with sqlite3.connect(data / "notes.sqlite3") as database:
             database.execute("CREATE TRIGGER fail_save BEFORE UPDATE ON notes BEGIN SELECT RAISE(ABORT, 'settings close fixture'); END;")
         report = app.command("retain a failed edit", "text", text=" UNSAVED")

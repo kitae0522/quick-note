@@ -21,6 +21,10 @@ impl QuickNoteApp {
         let window_focused = context.input(|input| input.focused);
         if window_focused && !self.window_was_focused {
             self.reload_shortcuts();
+            #[cfg(target_os = "macos")]
+            if self.settings_open() {
+                self.refresh_login_item();
+            }
             self.configure_motion(&context);
         }
         if window_focused
@@ -30,8 +34,9 @@ impl QuickNoteApp {
             self.reload_theme(&context);
         }
         self.window_was_focused = window_focused;
+        self.receive_capture(&context);
         self.keys(&context);
-        self.receive_menu(&context);
+        self.receive_menu(&context, false);
         if context.input(|input| input.viewport().close_requested())
             && self.dirty
             && !self.persist()
@@ -42,6 +47,15 @@ impl QuickNoteApp {
             }
             self.close_blocked = true;
         }
+        #[cfg(any(target_os = "macos", target_os = "windows"))]
+        if context.input(|input| input.viewport().close_requested())
+            && (self.capture_registered() || self.resident_installed())
+            && !self.capture.quitting
+            && !self.close_blocked
+        {
+            context.send_viewport_cmd(ViewportCommand::CancelClose);
+            self.hide_capture(&context);
+        }
         let palette = self.theme.palette();
         let header_height = self.theme.layout.toolbar_height;
         let focus_before_header = context.memory(|memory| memory.focused());
@@ -49,6 +63,9 @@ impl QuickNoteApp {
             .frame(Frame::NONE)
             .exact_size(header_height)
             .show(ui, |ui| {
+                if self.quiet_editor() && self.settings.is_none() {
+                    return self.capture_header(ui);
+                }
                 header::header(
                     ui,
                     &mut self.header,
@@ -75,7 +92,7 @@ impl QuickNoteApp {
         if let Some(action) = header.action {
             self.action(action, &context);
         }
-        if self.settings.is_none() {
+        if self.settings.is_none() && !self.quiet_editor() {
             self.status_bar(ui);
         }
         if self.error.is_some() || self.theme_error.is_some() || self.shortcut_error.is_some() {
@@ -151,7 +168,12 @@ impl QuickNoteApp {
         if self.close_blocked {
             self.close_dialog(&context, close_opacity);
         }
+        if !self.capture.pending.is_empty() && !self.composing {
+            context.request_repaint();
+        }
         self.update_menu(&context);
+        self.finish_capture(&context);
+        self.update_resident(&context);
         context.output_mut(|output| {
             output.commands.retain(|command| match command {
                 OutputCommand::OpenUrl(url) => ["https://", "http://", "mailto:"]

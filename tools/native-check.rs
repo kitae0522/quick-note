@@ -12,11 +12,16 @@ mod input;
 #[cfg(test)]
 #[path = "native_check/input_tests.rs"]
 mod input_tests;
+#[path = "native_check/key_input.rs"]
+mod key_input;
 #[cfg(target_os = "macos")]
 #[path = "native_check/menu.rs"]
 mod menu;
 #[path = "native_check/probe.rs"]
 mod probe;
+#[cfg(target_os = "macos")]
+#[path = "native_check/resident.rs"]
+mod resident;
 #[path = "native_check/wake.rs"]
 mod wake;
 use quick_note::app::QuickNoteApp;
@@ -37,11 +42,18 @@ fn main() -> eframe::Result {
     let mut directory = None;
     let mut output = None;
     let mut exit_after_first = false;
+    let mut quick_capture = false;
+    let mut resident = false;
     while let Some(arg) = args.next() {
         if arg == "--data-directory" {
             directory = args.next().map(PathBuf::from);
         } else if arg == "--output" {
             output = args.next().map(PathBuf::from);
+        } else if arg == "--quick-capture" {
+            quick_capture = true;
+        } else if arg == "--resident" {
+            resident = true;
+            quick_capture = true;
         } else if arg == "--startup-only" {
             exit_after_first = true;
         }
@@ -92,6 +104,12 @@ fn main() -> eframe::Result {
                 json!(started.elapsed().as_secs_f64() * 1000.0);
             app.configure(&creation.egui_ctx);
             app.install_menu(&creation.egui_ctx);
+            if quick_capture {
+                app.install_capture(&creation.egui_ctx);
+            }
+            if resident {
+                app.install_resident(&creation.egui_ctx);
+            }
             phases
                 .lock()
                 .expect("diagnostic phase mutex is not poisoned")["configured_ms"] =
@@ -111,7 +129,7 @@ fn main() -> eframe::Result {
                 native_pending: None,
                 native_expected: None,
                 native_delivered: false,
-                native_mode: false,
+                native_mode: quick_capture,
                 pending_frames: HashMap::new(),
                 screenshots_tx,
                 screenshots_rx,
@@ -120,6 +138,8 @@ fn main() -> eframe::Result {
                 menu_key_handled: None,
                 #[cfg(target_os = "macos")]
                 clipboard_backup: None,
+                #[cfg(target_os = "macos")]
+                resident_pending: None,
             }))
         }),
     )

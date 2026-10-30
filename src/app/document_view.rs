@@ -24,6 +24,7 @@ impl QuickNoteApp {
             self.restore_cursor = true;
         }
         let palette = self.theme.palette();
+        let quiet = self.quiet_editor();
         CentralPanel::default()
             .frame(Frame::new().fill(palette.background))
             .show(ui, |ui| {
@@ -34,18 +35,33 @@ impl QuickNoteApp {
                         active: self.document_find.active,
                         reveal,
                     });
-                    let result = editor::editor(
-                        ui,
-                        &mut self.note,
-                        &mut self.editor_metrics,
-                        &self.theme,
-                        EditorInteraction {
-                            focus: &mut self.focus_editor,
-                            restore_cursor: &mut self.restore_cursor,
-                            find,
-                        },
-                        self.locale.text(),
-                    );
+                    let bounds = ui.available_rect_before_wrap();
+                    let inset = if quiet {
+                        ((bounds.width() - 720.0) / 2.0).max(0.0)
+                    } else {
+                        0.0
+                    };
+                    let result = ui
+                        .scope_builder(
+                            UiBuilder::new()
+                                .max_rect(bounds.shrink2(eframe::egui::vec2(inset, 0.0))),
+                            |ui| {
+                                editor::editor(
+                                    ui,
+                                    &mut self.note,
+                                    &mut self.editor_metrics,
+                                    &self.theme,
+                                    EditorInteraction {
+                                        quiet,
+                                        focus: &mut self.focus_editor,
+                                        restore_cursor: &mut self.restore_cursor,
+                                        find,
+                                    },
+                                    self.locale.text(),
+                                )
+                            },
+                        )
+                        .inner;
                     self.location = result.location;
                     if result.changed {
                         self.document_find.invalidate();
@@ -57,6 +73,7 @@ impl QuickNoteApp {
                             ui.ctx().request_repaint();
                         }
                     } else if result.selection_changed
+                        && self.capture.draft_origin.is_none()
                         && let Err(error) = self.store.save_selection(&self.note)
                     {
                         self.error = Some(

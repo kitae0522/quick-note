@@ -71,6 +71,25 @@ impl Shortcuts {
                 .bindings
                 .insert("search_notes".into(), vec!["Primary+P".into()]);
         }
+        if !supplied.bindings.contains_key("close_tab")
+            && supplied
+                .bindings
+                .get("delete_note")
+                .is_some_and(|keys| keys == &["Primary+W"])
+        {
+            // Migrate the former destructive default in memory; preserve custom bindings on disk.
+            supplied.bindings.remove("delete_note");
+        }
+        if !supplied.bindings.contains_key("quit_app")
+            && supplied
+                .bindings
+                .get("close_window")
+                .is_some_and(|keys| keys == &["Primary+Shift+W", "Primary+Q"])
+        {
+            supplied
+                .bindings
+                .insert("close_window".into(), vec!["Primary+Shift+W".into()]);
+        }
         let mut configured = Vec::new();
         for sources in supplied.bindings.values() {
             for source in sources {
@@ -79,6 +98,13 @@ impl Shortcuts {
             }
         }
         for id in [
+            "delete_note",
+            "quit_app",
+            "close_tab",
+            "quick_capture",
+            "new_capture",
+            "capture_clipboard",
+            "focus_mode",
             "find_in_note",
             "replace_in_note",
             "find_next",

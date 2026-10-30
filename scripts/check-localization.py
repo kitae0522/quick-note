@@ -40,7 +40,7 @@ try:
         report = app.command("new Korean draft", key="n", command=True)
         blank = report["note_id"]
         assert next(tab["title"] for tab in report["tabs"] if tab["id"] == blank) == "제목 없음"
-        report = app.command("delete empty Korean draft", key="w", command=True)
+        report = app.command("delete empty Korean draft", key="backspace", command=True, shift=True)
         assert report["pending_delete"] is None and db_note(data, blank) is None
         app.command("Markdown preview", key="m", command=True, shift=True)
         app.command("Korean preview", "screenshot", name="korean-preview")
@@ -49,7 +49,7 @@ try:
         app.command("search user text", "text", text="한국어")
         report = app.command("open result", key="enter")
         assert report["note_id"] == note_id
-        app.command("delete confirmation", key="w", command=True)
+        app.command("delete confirmation", key="backspace", command=True, shift=True)
         app.command("Korean confirmation", "screenshot", name="korean-confirmation")
         report = app.command("default Cancel", key="enter")
         assert report["pending_delete"] is None and db_note(data, note_id)[0] == body

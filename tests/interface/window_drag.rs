@@ -104,7 +104,7 @@ fn tabs_search_and_header_buttons_never_start_native_window_drag() -> Result<()>
         "Search notes",
         "New note",
         "Open settings",
-        "Delete Weekend ideas",
+        "Close Weekend ideas",
     ] {
         let (_directory, app) = fixtures::fixture()?;
         let mut harness = fixtures::harness(app, [920.0, 600.0]);

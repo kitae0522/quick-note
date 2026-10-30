@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "bindings": {
     "new_note": ["Primary+N"],
-    "delete_note": ["Primary+W"],
-    "close_window": ["Primary+Shift+W", "Primary+Q"],
+    "delete_note": ["Primary+Shift+Backspace"],
+    "close_window": ["Primary+Shift+W"],
     "search_notes": ["Primary+P"],
     "find_in_note": ["Primary+F"],
     "replace_in_note": ["Primary+Alt+F"],
@@ -36,6 +36,14 @@
     "open_note_8": ["Primary+8"],
     "open_last_note": ["Primary+9"],
     "reload_shortcuts": [],
-    "open_shortcuts_folder": []
+    "open_shortcuts_folder": [],
+    "close_tab": ["Primary+W"],
+    "recently_deleted": [],
+    "new_capture": ["Primary+Alt+Shift+N"],
+    "capture_clipboard": ["Primary+Alt+V"],
+    "quick_capture": ["Primary+Alt+N"],
+    "focus_mode": ["Primary+Shift+F"],
+    "pin_window": [],
+    "quit_app": ["Primary+Q"]
   }
 }
