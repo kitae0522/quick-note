@@ -133,7 +133,9 @@ fn main() -> Result<()> {
             "preview" => harness.key_press_modifiers(Modifiers::COMMAND | Modifiers::SHIFT, Key::M),
             "search" | "empty" => harness.key_press_modifiers(Modifiers::COMMAND, Key::P),
             "settings" => harness.key_press_modifiers(Modifiers::COMMAND, Key::Comma),
-            "delete" => harness.key_press_modifiers(Modifiers::COMMAND, Key::W),
+            "delete" => {
+                harness.key_press_modifiers(Modifiers::COMMAND | Modifiers::SHIFT, Key::Backspace)
+            }
             _ => {}
         }
         harness.run();

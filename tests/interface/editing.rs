@@ -32,7 +32,7 @@ fn edit_search_preview_and_confirmed_delete_follow_real_ui() -> Result<()> {
     assert_eq!(harness.state().note.title(), "Weekend ideas");
     let selected = harness.state().note.id.clone();
 
-    harness.key_press_modifiers(Modifiers::COMMAND, Key::W);
+    harness.key_press_modifiers(Modifiers::COMMAND | Modifiers::SHIFT, Key::Backspace);
     harness.run();
     assert_eq!(
         harness.state().pending_delete.as_deref(),
@@ -46,7 +46,7 @@ fn edit_search_preview_and_confirmed_delete_follow_real_ui() -> Result<()> {
     assert_eq!(harness.state().note.id, selected);
     assert_eq!(harness.state().store.summaries()?.len(), 3);
 
-    harness.key_press_modifiers(Modifiers::COMMAND, Key::W);
+    harness.key_press_modifiers(Modifiers::COMMAND | Modifiers::SHIFT, Key::Backspace);
     harness.run();
     harness.get_by_label("Delete note").click();
     harness.run();

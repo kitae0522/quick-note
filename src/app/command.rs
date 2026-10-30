@@ -13,12 +13,52 @@ impl QuickNoteApp {
     pub(super) fn command(&mut self, command: Command, context: &Context) {
         let action = match command {
             Command::New => Some(HeaderAction::New),
-            Command::Delete if self.settings_open() => {
+            Command::CloseTab if self.settings_open() => {
                 self.close_settings(context);
                 None
             }
+            Command::CloseTab => Some(HeaderAction::CloseTab(self.note.id.clone())),
             Command::Delete => Some(HeaderAction::Delete(self.note.id.clone())),
+            Command::Trash => {
+                self.request_search(context);
+                self.search_deleted = true;
+                self.header.query.clear();
+                None
+            }
+            Command::Capture => {
+                self.toggle_capture(context, context.input(|input| input.focused));
+                None
+            }
+            Command::NewCapture => {
+                if let Err(error) = self.new_capture(context) {
+                    self.error.get_or_insert(error);
+                }
+                None
+            }
+            Command::CaptureClipboard => {
+                self.capture_clipboard(context);
+                None
+            }
+            Command::FocusMode => {
+                self.toggle_focus_mode(context);
+                None
+            }
+            Command::PinWindow => {
+                self.toggle_pin(context);
+                None
+            }
             Command::Close => Some(HeaderAction::CloseWindow),
+            Command::Quit => {
+                self.capture.quitting = true;
+                if self.dirty && !self.persist() {
+                    self.close_blocked = true;
+                    self.modal_new = true;
+                    Self::show_window(context);
+                    None
+                } else {
+                    Some(HeaderAction::CloseWindow)
+                }
+            }
             Command::Search => Some(HeaderAction::Search),
             Command::Find | Command::Replace | Command::FindNext | Command::FindPrevious => {
                 self.find_command(command, context);
@@ -125,7 +165,11 @@ impl QuickNoteApp {
             Command::CycleFocus => {
                 let editor = Id::unique(("note-editor", &self.note.id));
                 if context.memory(|memory| memory.has_focus(editor)) {
-                    self.header.focus_tab = Some(self.note.id.clone());
+                    if self.quiet_editor() {
+                        self.header.focus_search = true;
+                    } else {
+                        self.header.focus_tab = Some(self.note.id.clone());
+                    }
                     self.header.reveal_active = true;
                 } else {
                     self.mode = Mode::Edit;

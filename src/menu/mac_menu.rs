@@ -2,7 +2,9 @@
 use super::MenuAction;
 use super::MenuState;
 use super::builder::BuiltMenu;
+use super::resident_menu::ResidentMenu;
 use crate::i18n::Messages;
+use crate::model::NoteSummary;
 use crate::shortcut::Command;
 use crate::shortcut::Shortcuts;
 use crate::storage::Result;
@@ -16,6 +18,7 @@ pub(crate) struct MacMenu {
     built: BuiltMenu,
     receiver: mpsc::Receiver<MenuEvent>,
     state: Option<MenuState>,
+    resident: Option<ResidentMenu>,
 }
 
 impl MacMenu {
@@ -44,6 +47,7 @@ impl MacMenu {
             built,
             receiver,
             state: None,
+            resident: None,
         })
     }
 
@@ -57,6 +61,9 @@ impl MacMenu {
         built.root.init_for_nsapp();
         self.built = built;
         self.state = None;
+        if let Some(resident) = &mut self.resident {
+            resident.relabel(text)?;
+        }
         Ok(())
     }
 
@@ -68,7 +75,12 @@ impl MacMenu {
                     .items
                     .iter()
                     .find(|(item, _, _)| item.id() == &event.id)
-                    .map(|(_, action, _)| *action)
+                    .map(|(_, action, _)| action.clone())
+                    .or_else(|| {
+                        self.resident
+                            .as_ref()
+                            .and_then(|resident| resident.action(&event.id))
+                    })
             })
             .collect()
     }
@@ -79,11 +91,11 @@ impl MacMenu {
         }
         for (item, action, hint) in &self.built.items {
             item.set_enabled(action.enabled(state));
-            let label = if *action == MenuAction::App(Command::Delete) {
+            let label = if *action == MenuAction::App(Command::CloseTab) {
                 Some(if state.settings {
                     &text.back_to_note
                 } else {
-                    &text.shortcut_delete
+                    &text.close_note
                 })
             } else if *action == MenuAction::App(Command::Preview) {
                 Some(if state.preview {
@@ -102,5 +114,34 @@ impl MacMenu {
             }
         }
         self.state = Some(state);
+    }
+    pub fn install_resident(&mut self, text: &Messages, notes: Vec<NoteSummary>) -> Result<()> {
+        if self.resident.is_none() {
+            self.resident = Some(ResidentMenu::new(text, notes)?);
+        }
+        Ok(())
+    }
+
+    pub fn resident_installed(&self) -> bool {
+        self.resident.is_some()
+    }
+
+    pub fn refresh_recent(&mut self, text: &Messages, notes: Vec<NoteSummary>) -> Result<()> {
+        if let Some(resident) = &mut self.resident {
+            resident.refresh(text, notes)?;
+        }
+        Ok(())
+    }
+
+    pub fn capture_feedback(&self, message: Option<&str>) {
+        if let Some(resident) = &self.resident {
+            resident.tray.set_title(message.map(|_| "✓"));
+            let _ = resident.tray.set_tooltip(message);
+        }
+    }
+
+    #[cfg(feature = "diagnostics")]
+    pub fn resident_menu(&self) -> Option<objc2::rc::Retained<objc2_app_kit::NSMenu>> {
+        self.resident.as_ref()?.native.clone()
     }
 }

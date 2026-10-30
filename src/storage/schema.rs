@@ -15,7 +15,7 @@ pub(super) fn open_connection(path: &Path) -> Result<Connection> {
     let mut connection = Connection::open(path)?;
     connection.busy_timeout(Duration::from_millis(50))?;
     let version: i64 = connection.pragma_query_value(None, "user_version", |row| row.get(0))?;
-    if version > 2 {
+    if version > 3 {
         return Err(i18n::message(|m| &m.error_schema_newer)
             .arg("version", version)
             .into());
@@ -31,8 +31,8 @@ pub(super) fn open_connection(path: &Path) -> Result<Connection> {
     #[cfg(target_os = "macos")]
     connection.pragma_update(None, "fullfsync", "ON")?;
 
-    if version == 1 {
-        let backup = path.with_extension("v1-backup.sqlite3");
+    if version == 1 || version == 2 {
+        let backup = path.with_extension(format!("v{version}-backup.sqlite3"));
         if !backup.exists() {
             let backup_path = backup
                 .to_str()
@@ -41,7 +41,7 @@ pub(super) fn open_connection(path: &Path) -> Result<Connection> {
         }
         private_file(&backup)?;
     }
-    if version < 2 {
+    if version < 3 {
         let transaction = connection.transaction()?;
         if version == 0 {
             transaction.execute_batch(
@@ -54,7 +54,7 @@ pub(super) fn open_connection(path: &Path) -> Result<Connection> {
                     CREATE TABLE IF NOT EXISTS app_state (
                     key TEXT PRIMARY KEY NOT NULL, value TEXT NOT NULL);",
             )?;
-        } else {
+        } else if version == 1 {
             transaction.execute(
                 "ALTER TABLE notes ADD COLUMN title TEXT NOT NULL DEFAULT 'Untitled'",
                 [],
@@ -70,7 +70,12 @@ pub(super) fn open_connection(path: &Path) -> Result<Connection> {
                 )?;
             }
         }
-        transaction.pragma_update(None, "user_version", 2)?;
+        transaction.execute_batch(
+            "ALTER TABLE notes ADD COLUMN closed INTEGER NOT NULL DEFAULT 0;
+             ALTER TABLE notes ADD COLUMN deleted_at REAL;
+             CREATE INDEX notes_visibility ON notes(deleted_at, closed, created_at);
+             PRAGMA user_version = 3;",
+        )?;
         transaction.commit()?;
     }
     Ok(connection)

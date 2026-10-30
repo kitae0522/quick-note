@@ -2,7 +2,6 @@
 use super::Mode;
 use super::QuickNoteApp;
 use super::settings_section::SettingsSection;
-use crate::ui::FocusTarget;
 use crate::ui::header::HeaderAction;
 use eframe::egui::Context;
 use eframe::egui::Event;
@@ -35,7 +34,21 @@ impl QuickNoteApp {
         if let Some(command) = context.input_mut(|input| self.shortcuts.consume(input)) {
             // Consumed app shortcuts must not also traverse widgets (Ctrl+Shift+Tab on macOS).
             context.memory_mut(|memory| memory.move_focus(FocusDirection::None));
-            self.command(command, context);
+            if ime_owns_navigation
+                && matches!(
+                    command,
+                    crate::shortcut::Command::CloseTab
+                        | crate::shortcut::Command::Delete
+                        | crate::shortcut::Command::NewCapture
+                        | crate::shortcut::Command::CaptureClipboard
+                )
+            {
+                self.pending_menu
+                    .push(crate::menu::MenuAction::App(command));
+                context.request_repaint();
+            } else {
+                self.command(command, context);
+            }
         }
         if ime_owns_navigation {
             return;
@@ -65,14 +78,10 @@ impl QuickNoteApp {
             }
             input.consume_key(Modifiers::NONE, Key::Escape)
         });
-        if let Some(id) = selected {
-            self.action(
-                HeaderAction::Select {
-                    id,
-                    focus: FocusTarget::Editor,
-                },
-                context,
-            );
+        if let Some(id) = selected
+            && let Err(error) = self.open_search_result(&id, context)
+        {
+            self.error = Some(error);
         }
         if escape {
             if self.document_find.open {
@@ -82,6 +91,8 @@ impl QuickNoteApp {
                 self.restore_focus(context);
             } else if self.settings_open() {
                 self.close_settings(context);
+            } else if self.capture.compact {
+                self.hide_capture(context);
             } else {
                 self.mode = Mode::Edit;
                 self.focus_editor = true;
@@ -101,6 +112,7 @@ impl QuickNoteApp {
                 Ok(())
             }
             HeaderAction::New => self.new_note(),
+            HeaderAction::CloseTab(id) => self.close_tab(&id),
             HeaderAction::Delete(id) => {
                 self.previous_focus = context.memory(|memory| memory.focused());
                 self.request_delete(&id)

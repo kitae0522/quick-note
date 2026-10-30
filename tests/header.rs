@@ -79,9 +79,7 @@ fn narrow_header_keeps_the_active_tab_delete_control_clear_of_other_controls() {
                 app
             });
         harness.run();
-        let close = harness
-            .get_by_label("Delete A thought worth keeping")
-            .rect();
+        let close = harness.get_by_label("Close A thought worth keeping").rect();
         let new = harness.get_by_label("New note").rect();
         assert!(
             close.left() >= 0.0 && close.right() <= new.left(),

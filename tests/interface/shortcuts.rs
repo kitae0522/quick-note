@@ -67,7 +67,7 @@ fn shortcuts_reload_from_settings_and_reject_conflicts_without_losing_work() -> 
     fixtures::capture(&mut harness, "shortcut-settings-custom");
     fs::write(
         &path,
-        r#"{"schemaVersion":1,"bindings":{"new_note":["Primary+W"]}}"#,
+        r#"{"schemaVersion":1,"bindings":{"new_note":["Primary+W"],"close_tab":["Primary+W"]}}"#,
     )?;
     harness
         .get_by_role_and_label(Role::Button, "Reload shortcuts")

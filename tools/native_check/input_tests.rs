@@ -47,6 +47,8 @@ fn replay_twice(command: Value, clipboard: Option<&str>, native: bool) -> Result
         menu_key_handled: None,
         #[cfg(target_os = "macos")]
         clipboard_backup: None,
+        #[cfg(target_os = "macos")]
+        resident_pending: None,
     };
     let mut first = RawInput::default();
     first

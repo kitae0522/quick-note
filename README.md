@@ -47,8 +47,10 @@ cursor. Edits save to a local SQLite database as you type.
 
 *Sample notes in the macOS app. Click an image for the full size.*
 
-- Keep every note in one compact tab strip. Drag tabs to reorder them.
-- Search all notes, or find and replace text in the current note.
+- Press Cmd+Option+N while the app is running to capture a thought in a small window.
+- Keep open notes in tabs; closing a tab keeps the note in your library.
+- Search with matching excerpts, or find and replace text in the current note.
+- Hide tabs and line numbers with Focus mode, or pin the window above other apps.
 - Write with line numbers, an active-line indicator and automatic bracket pairs.
 - Switch between source and Markdown preview, or turn Markdown off.
 - Use installed fonts in a fallback stack and share JSON themes and shortcuts.
@@ -63,6 +65,8 @@ Built with [Rust](https://www.rust-lang.org/),
 ### Download
 
 The first public release is **v0.2.0-alpha.1**.
+The capture and library changes described below are in the current source and have
+not been included in that published alpha.
 
 | Platform | Download | Install |
 | --- | --- | --- |
@@ -98,18 +102,38 @@ Open the app and start typing. Closing the window or quitting keeps your notes.
 | Action | macOS | Windows |
 | --- | --- | --- |
 | New note | Cmd+N | Ctrl+N |
+| Quick capture while running | Cmd+Option+N | Ctrl+Alt+N |
+| New quick note | Cmd+Option+Shift+N | Ctrl+Alt+Shift+N |
+| Save clipboard as note | Cmd+Option+V | Ctrl+Alt+V |
 | Search all notes | Cmd+P | Ctrl+P |
 | Find in current note | Cmd+F | Ctrl+F |
 | Replace in current note | Cmd+Option+F | Ctrl+Alt+F |
 | Toggle Markdown preview | Cmd+Shift+M | Ctrl+Shift+M |
-| Delete current note | Cmd+W | Ctrl+W |
+| Close tab, keeping the note | Cmd+W | Ctrl+W |
+| Delete current note | Cmd+Shift+Backspace | Ctrl+Shift+Backspace |
+| Toggle Focus mode | Cmd+Shift+F | Ctrl+Shift+F |
 | Close the window, keeping notes | Cmd+Shift+W | Ctrl+Shift+W |
+| Quit | Cmd+Q | Ctrl+Q |
 | Settings | Cmd+, | Ctrl+, |
 
-**Cmd/Ctrl+W deletes the active note.** Empty notes delete immediately; notes with
-content ask for confirmation. In Settings, the same shortcut returns to the note.
+**Cmd/Ctrl+W closes a tab and keeps its note.** Search reopens closed notes.
+Explicit deletion asks for confirmation when the note has content; **Recently
+deleted** restores its text and cursor. In Settings, Cmd/Ctrl+W returns to the note.
 Tab inserts four spaces in the editor. Use F6 to move focus between the editor and
 tabs, and Esc to close a panel and return to writing.
+
+Quick capture resumes the current note. Esc saves and hides the compact window,
+returning to your previous app; **Expand** restores the full window. With the global
+shortcut registered or the macOS status menu available, closing the window keeps
+Quick Note running. Use Quit to exit. **New quick note** starts empty and creates a
+stored note only after the first input. Closing an unused capture restores the
+previous note. **Save clipboard as note** keeps your current app, note and cursor;
+the menu bar briefly shows a checkmark after saving.
+
+The macOS menu bar icon provides captures and the five most recently saved notes.
+**Settings → Open at login** is opt-in, available in the app bundle, and reflects
+macOS Login Items approval. A shortcut conflict appears as an error; change the
+binding in Settings if another app already uses it.
 
 See the [user guide](docs/user-guide.md) for every default shortcut, tab navigation,
 search and replace, Markdown behavior and failed-save recovery.

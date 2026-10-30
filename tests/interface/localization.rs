@@ -133,7 +133,7 @@ fn korean_search_confirmation_markdown_and_minimum_layout_use_translated_labels(
         harness.key_press(Key::Enter);
         harness.run();
         assert_eq!(harness.state().note.title(), "Weekend ideas");
-        harness.key_press_modifiers(Modifiers::COMMAND, Key::W);
+        harness.key_press_modifiers(Modifiers::COMMAND | Modifiers::SHIFT, Key::Backspace);
         harness.run();
         assert!(harness.get_by_label("취소").is_focused());
         harness.key_press(Key::Enter);
@@ -165,7 +165,7 @@ fn only_generated_untitled_names_are_translated_and_searchable() -> Result<()> {
     assert_eq!(harness.state().search_results()[0].id, blank);
     harness.key_press(Key::Escape);
     harness.run();
-    harness.key_press_modifiers(Modifiers::COMMAND, Key::W);
+    harness.key_press_modifiers(Modifiers::COMMAND | Modifiers::SHIFT, Key::Backspace);
     harness.run();
     assert!(harness.state().pending_delete.is_none());
     assert!(harness.state().store.note(&blank)?.is_none());

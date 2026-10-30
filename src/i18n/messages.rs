@@ -5,7 +5,23 @@ use serde::Serialize;
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct Messages {
+    pub capture: super::CaptureMessages,
     pub app_name: String,
+    pub close_note: String,
+    pub close_named_note: String,
+    pub recently_deleted: String,
+    pub restore_note: String,
+    pub focus_mode: String,
+    pub quick_capture: String,
+    pub capture_menu: String,
+    pub capture_hint: String,
+    pub expand_note: String,
+    pub pin_window: String,
+    pub error_capture: String,
+    pub edited_now: String,
+    pub edited_minutes: String,
+    pub edited_hours: String,
+    pub edited_days: String,
     pub menu_file: String,
     pub menu_view: String,
     pub menu_window: String,

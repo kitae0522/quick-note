@@ -12,6 +12,9 @@ impl QuickNoteApp {
             return Err(i18n::message(|m| &m.error_save_before_switch).into());
         }
         let note = self.store.activate(id)?;
+        if !self.tabs.iter().any(|tab| tab.id == id) {
+            self.tabs = self.store.summaries()?;
+        }
         self.display(note, focus);
         Ok(())
     }
@@ -23,12 +26,19 @@ impl QuickNoteApp {
         let note = self.store.create_note()?;
         self.tabs.push(note.summary());
         self.display(note, FocusTarget::Editor);
-        self.search_cache = None;
+        if let Some(cache) = &mut self.search_cache {
+            cache.upsert(&self.note);
+        }
+        self.search_previews.clear();
         self.search_query = None;
         Ok(())
     }
 
     pub(super) fn display(&mut self, note: Note, focus: FocusTarget) {
+        if self.capture.draft_origin.take().is_some() {
+            self.tabs.retain(|tab| tab.id != self.note.id);
+        }
+        self.capture.recent_dirty = true;
         self.document_find.close();
         self.note = note;
         self.markdown_cache = None;
@@ -67,21 +77,27 @@ impl QuickNoteApp {
     }
 
     pub fn confirm_delete(&mut self) -> Result<()> {
-        if self.pending_delete.as_deref() != Some(self.note.id.as_str())
-            && self.dirty
-            && !self.persist()
-        {
+        if self.dirty && !self.persist() {
             return Err(i18n::message(|m| &m.error_save_before_delete).into());
         }
         let id = self
             .pending_delete
             .clone()
             .ok_or(i18n::message(|m| &m.error_delete_selection))?;
+        if self.capture.draft_origin.is_some() && id == self.note.id {
+            self.pending_delete = None;
+            self.discard_capture_draft();
+            return Ok(());
+        }
         let next = self.store.delete_confirmed(&id)?;
         self.clear_recovery(&id);
         self.tabs = self.store.summaries()?;
         self.pending_delete = None;
-        self.search_cache = None;
+        if let Some(cache) = &mut self.search_cache {
+            cache.remove(&id);
+            cache.upsert(&next);
+        }
+        self.search_previews.clear();
         self.search_query = None;
         self.display(next, FocusTarget::Editor);
         Ok(())

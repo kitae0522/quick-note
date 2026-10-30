@@ -174,7 +174,7 @@ fn text_navigation_and_cancel_work_during_the_first_animation_frame() -> Result<
     harness.step();
     assert_eq!(harness.state().note.title(), "Release checklist");
     assert_eq!(harness.state().note.body, expected);
-    harness.key_press_modifiers(Modifiers::COMMAND, Key::W);
+    harness.key_press_modifiers(Modifiers::COMMAND | Modifiers::SHIFT, Key::Backspace);
     harness.step();
     assert!(harness.get_by_label("Cancel").is_focused());
     harness.key_press(Key::Enter);

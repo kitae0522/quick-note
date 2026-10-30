@@ -1,3 +1,8 @@
+mod capture_actions;
+mod capture_draft;
+mod capture_header;
+mod capture_state;
+mod clipboard_capture;
 mod command;
 mod dialogs;
 mod document_find;
@@ -16,15 +21,20 @@ mod font_stack_controls;
 mod font_workspace;
 mod keyboard;
 mod language;
+#[cfg(target_os = "macos")]
+mod login_item;
 mod markdown;
 #[cfg(test)]
 mod markdown_tests;
 mod menu_actions;
 mod mode;
 mod motion_preferences;
+mod native_app;
 mod note_actions;
+mod notebook;
 mod persistence;
 mod quick_note_app;
+mod resident;
 mod search;
 mod search_popup;
 mod settings_actions;

@@ -2,10 +2,8 @@
 use super::QuickNoteApp;
 use crate::i18n;
 use crate::ui;
-use crate::ui::FocusTarget;
 use crate::ui::safe_area;
 use eframe::egui;
-use eframe::egui::Button;
 use eframe::egui::Context;
 use eframe::egui::FontFamily;
 use eframe::egui::FontId;
@@ -14,7 +12,6 @@ use eframe::egui::Id;
 use eframe::egui::Label;
 use eframe::egui::Rect;
 use eframe::egui::RichText;
-use eframe::egui::Role;
 use eframe::egui::ScrollArea;
 use eframe::egui::TextEdit;
 use eframe::egui::WidgetInfo;
@@ -37,7 +34,7 @@ impl QuickNoteApp {
                 + self.theme.layout.toolbar_height
                 + safe_area::POPOVER_GAP,
         );
-        let width = 380.0_f32.min(safe.width());
+        let width = 480.0_f32.min(safe.width());
         let position = egui::pos2(
             self.search_rect
                 .left()
@@ -45,7 +42,7 @@ impl QuickNoteApp {
             safe.top(),
         );
         let bounds = Rect::from_min_size(position, egui::vec2(width, safe.height().min(320.0)));
-        let compact = context.content_rect().width() < 620.0;
+        let compact = context.content_rect().width() < 620.0 || self.quiet_editor();
         let mut selected = None;
         let result = Window::new(self.locale.text().find_note.as_str())
             .id(Id::unique("note-search-popup"))
@@ -101,6 +98,25 @@ impl QuickNoteApp {
                         context.request_repaint();
                     }
                 }
+                if safe.height() >= 220.0 {
+                    ui.horizontal(|ui| {
+                        for (deleted, label) in [
+                            (false, &self.locale.text().notes),
+                            (true, &self.locale.text().recently_deleted),
+                        ] {
+                            if ui
+                                .selectable_label(self.search_deleted == deleted, label.as_str())
+                                .clicked()
+                            {
+                                self.search_deleted = deleted;
+                                self.search_query = None;
+                                self.search_index = 0;
+                                self.search_focus_popup = compact;
+                                self.header.focus_search = !compact;
+                            }
+                        }
+                    });
+                }
                 let help = ui.painter().layout(
                     self.locale.text().search_help.clone(),
                     FontId::proportional(12.0),
@@ -109,15 +125,16 @@ impl QuickNoteApp {
                 );
                 let height =
                     (ui.available_height() - help.size().y - ui.spacing().item_spacing.y).max(0.0);
+                let row_height = height.clamp(24.0, 64.0);
                 let mut scrolling = ScrollArea::vertical()
                     .id_salt("search-results")
-                    .min_scrolled_height(height.min(36.0))
+                    .min_scrolled_height(height.min(row_height))
                     .max_height(height)
                     .auto_shrink([false, true]);
                 if self.search_reveal {
-                    let stride = 36.0 + ui.spacing().item_spacing.y;
+                    let stride = row_height + ui.spacing().item_spacing.y;
                     scrolling = scrolling.vertical_scroll_offset(
-                        (self.search_index as f32 * stride - (height - 36.0) / 2.0).max(0.0),
+                        (self.search_index as f32 * stride - (height - row_height) / 2.0).max(0.0),
                     );
                     self.search_reveal = false;
                 }
@@ -136,50 +153,37 @@ impl QuickNoteApp {
                         }
                     });
                 } else {
-                    scrolling.show_rows(ui, 36.0, self.search_results.len(), |ui, rows| {
+                    scrolling.show_rows(ui, row_height, self.search_results.len(), |ui, rows| {
                         for index in rows {
+                            let id = self.search_results[index].id.clone();
+                            if let Err(error) = self.prepare_search_preview(&id) {
+                                self.error = Some(
+                                    i18n::message(|m| &m.error_search)
+                                        .cause("error", error)
+                                        .into(),
+                                );
+                            }
                             let note = &self.search_results[index];
-                            let response = ui.add_sized(
-                                [ui.available_width(), 36.0],
-                                Button::new(crate::ui::note_title(note, self.locale.text()))
-                                    .right_text(
-                                        RichText::new(if index == self.search_index {
-                                            ui::icons::CHECK
-                                        } else {
-                                            ""
-                                        })
-                                        .font(FontId::new(14.0, FontFamily::Name("icons".into()))),
-                                    )
-                                    .truncate()
-                                    .selected(index == self.search_index)
-                                    .frame_when_inactive(index == self.search_index),
-                            );
-                            response.widget_info(|| {
-                                WidgetInfo::selected(
-                                    Role::Button,
-                                    true,
-                                    index == self.search_index,
-                                    i18n::format(
-                                        &self.locale.text().open_note,
-                                        &[(
-                                            "title",
-                                            crate::ui::note_title(note, self.locale.text()),
-                                        )],
-                                    ),
-                                )
-                            });
+                            let response = ui::search_result::SearchRow {
+                                note,
+                                preview: self.search_previews.get(&note.id),
+                                selected: index == self.search_index,
+                                deleted: self.search_deleted,
+                                text: self.locale.text(),
+                                palette: self.theme.palette(),
+                                height: row_height,
+                            }
+                            .show(ui);
                             if response.clicked() {
                                 selected = Some(note.id.clone());
                             }
-                            ui::focus_ring(ui, &response, self.theme.palette());
-                            response.on_hover_text(crate::ui::note_title(note, self.locale.text()));
                         }
                     });
                 }
                 ui.add(Label::new(help));
             });
         if let Some(id) = selected
-            && let Err(error) = self.select_note(&id, FocusTarget::Editor)
+            && let Err(error) = self.open_search_result(&id, context)
         {
             self.error = Some(error);
         }

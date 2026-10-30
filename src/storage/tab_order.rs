@@ -28,7 +28,7 @@ pub(super) fn positions(connection: &Connection) -> Result<HashMap<String, usize
 
 pub(super) fn ordered_ids(connection: &Connection) -> Result<Vec<String>> {
     let mut ids: Vec<String> = connection
-        .prepare_cached("SELECT id FROM notes ORDER BY created_at, rowid")?
+        .prepare_cached("SELECT id FROM notes WHERE deleted_at IS NULL AND closed = 0 ORDER BY created_at, rowid")?
         .query_map([], |row| row.get(0))?
         .collect::<rusqlite::Result<_>>()?;
     let positions = positions(connection)?;

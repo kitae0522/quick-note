@@ -1,4 +1,4 @@
-//! One note tab owns its title, focus navigation and delete target.
+//! One note tab owns its title, focus navigation and close target.
 use super::HeaderAction;
 use super::HeaderState;
 use super::tab_drag::TabDrag;
@@ -144,16 +144,16 @@ impl NoteTab<'_> {
                                     Role::Button,
                                     true,
                                     crate::i18n::format(
-                                        &text.delete_named_note,
+                                        &text.close_named_note,
                                         &[("title", title_text)],
                                     ),
                                 )
                             });
                             if close.clicked() {
-                                action = Some(HeaderAction::Delete(self.note.id.clone()));
+                                action = Some(HeaderAction::CloseTab(self.note.id.clone()));
                             }
                             close.on_hover_text(crate::i18n::format(
-                                &text.delete_named_hint,
+                                &text.close_named_note,
                                 &[("title", title_text)],
                             ));
                         });

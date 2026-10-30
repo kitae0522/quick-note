@@ -23,18 +23,11 @@ pub(super) fn read_note(row: &Row<'_>) -> rusqlite::Result<Note> {
 }
 
 pub(super) fn insert_note(transaction: &Transaction<'_>) -> Result<Note> {
-    let time = super::timestamp();
-    let note = Note {
-        id: uuid::Uuid::new_v4().to_string(),
-        body: String::new(),
-        created_at: time,
-        updated_at: time,
-        selection: Selection::default(),
-    };
+    let note = super::draft_note();
     transaction.execute(
         "INSERT INTO notes (id, body, created_at, updated_at, title) \
             VALUES (?1, '', ?2, ?2, 'Untitled')",
-        params![note.id, time],
+        params![note.id, note.created_at],
     )?;
     transaction.execute(
         "INSERT INTO app_state (key, value) VALUES ('activeNote', ?1) \

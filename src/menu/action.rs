@@ -35,11 +35,12 @@ impl EditCommand {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum MenuAction {
     App(Command),
     Edit(EditCommand),
     Fonts,
+    OpenNote(String),
     #[cfg(target_os = "macos")]
     Hide,
     #[cfg(target_os = "macos")]
@@ -62,7 +63,7 @@ pub(crate) struct MenuState {
 }
 
 impl MenuAction {
-    pub(crate) fn enabled(self, state: MenuState) -> bool {
+    pub(crate) fn enabled(&self, state: MenuState) -> bool {
         #[cfg(target_os = "macos")]
         if matches!(self, Self::Hide | Self::HideOthers | Self::ShowAll) {
             return true;

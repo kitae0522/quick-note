@@ -118,6 +118,7 @@ impl QuickNoteApp {
                 }
                 if keep.clicked() {
                     self.close_blocked = false;
+                    self.capture.quitting = false;
                     self.close_settings(context);
                 }
                 if ui
@@ -147,6 +148,7 @@ impl QuickNoteApp {
         });
         if response.should_close() {
             self.close_blocked = false;
+            self.capture.quitting = false;
             self.focus_editor = true;
         }
     }

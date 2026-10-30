@@ -1,6 +1,7 @@
 mod lines;
 mod note;
 mod search_index;
+mod search_preview;
 mod selection;
 mod text_search;
 pub(crate) use search_index::SearchIndex;
@@ -15,3 +16,5 @@ pub use text_search::find_matches;
 
 mod cursor_location;
 pub use cursor_location::CursorLocation;
+
+pub(crate) use search_preview::SearchPreview;

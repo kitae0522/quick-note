@@ -45,11 +45,11 @@ try:
             app.command("search across note bodies", "text", text="CAFÉ")
             report = app.command("open search result", key="enter")
             assert report["note_id"] == first
-            report = app.command("show delete confirmation", key="w", command=True)
+            report = app.command("show delete confirmation", key="backspace", command=True, shift=True)
             assert report["pending_delete"] == first and db_note(data, first)
             report = app.command("Enter defaults to Cancel", key="enter")
             assert report["pending_delete"] is None and db_note(data, first)
-            app.command("show confirmation again", key="w", command=True)
+            app.command("show confirmation again", key="backspace", command=True, shift=True)
             app.command("focus Delete note", key="tab")
             report = app.command("confirm deletion", key="enter")
             assert db_note(data, first) is None and report["note_id"] == second
@@ -109,7 +109,7 @@ try:
         with sqlite3.connect(data / "notes.sqlite3") as database:
             for index in range(50):
                 body = f"# Idea {index + 1:03}\n\n" + "A small idea, saved immediately. " * 32 + f"\nmarker-{index:03}"
-                database.execute("INSERT INTO notes VALUES (?,?,?,?,?,?,?)", (f"fixture-{index}", body, 1000 + index, 1000 + index, 0, 0, f"Idea {index + 1:03}"))
+                database.execute("INSERT INTO notes(id,body,created_at,updated_at,selection_location,selection_length,title) VALUES (?,?,?,?,?,?,?)", (f"fixture-{index}", body, 1000 + index, 1000 + index, 0, 0, f"Idea {index + 1:03}"))
         for iteration in range(5):
             app = Native(data, f"03-startup-52-notes-{iteration + 1}")
             try:

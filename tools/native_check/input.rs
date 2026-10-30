@@ -2,7 +2,6 @@
 use eframe::egui::Context;
 use eframe::egui::Event;
 use eframe::egui::ImeEvent;
-use eframe::egui::Key;
 use eframe::egui::Modifiers;
 use eframe::egui::PointerButton;
 use eframe::egui::RawInput;
@@ -59,21 +58,27 @@ impl Probe {
         if !self.ready {
             return;
         }
-        if !input.focused {
-            if !self.native_mode {
-                self.focus_fixture(context);
-            }
-            return;
+        if !input.focused && !self.native_mode {
+            self.focus_fixture(context);
         }
-        // eframe can call the hook during logic-only ticks without running the UI.
-        // Keep our input until an actual UI pass consumes it, filtering physical input each time.
-        input.events.extend(self.queued_events.iter().cloned());
+        // Replay queued input only during focused UI passes. Read each command once so an
+        // atomic replacement cannot change its kind between the resident and editor handlers.
+        if input.focused {
+            input.events.extend(self.queued_events.iter().cloned());
+        }
         let Ok(bytes) = fs::read(self.output.join("command.json")) else {
             return;
         };
         let Ok(command) = serde_json::from_slice::<Value>(&bytes) else {
             return;
         };
+        #[cfg(target_os = "macos")]
+        if self.feed_resident(context, &command) {
+            return;
+        }
+        if !input.focused {
+            return;
+        }
         let Some(sequence) = command["sequence"]
             .as_u64()
             .filter(|sequence| *sequence > self.sequence)
@@ -117,7 +122,9 @@ impl Probe {
             }
             #[cfg(target_os = "macos")]
             "restore_clipboard" => {
-                self.clipboard_backup = None;
+                if let Err(error) = self.restore_clipboard() {
+                    self.fail(error);
+                }
             }
             #[cfg(target_os = "macos")]
             "menu_key" => match super::menu::key_equivalent(
@@ -132,62 +139,11 @@ impl Probe {
                     .events
                     .push(Event::Text(command["text"].as_str().unwrap_or("").into()));
             }
-            "key" => {
-                let key = match command["key"].as_str().unwrap_or("") {
-                    "n" => Key::N,
-                    "k" => Key::K,
-                    "p" => Key::P,
-                    "f" => Key::F,
-                    "g" => Key::G,
-                    "f3" => Key::F3,
-                    "m" => Key::M,
-                    "w" => Key::W,
-                    "s" => Key::S,
-                    "z" => Key::Z,
-                    "a" => Key::A,
-                    "escape" => Key::Escape,
-                    "enter" => Key::Enter,
-                    "space" => Key::Space,
-                    "tab" => Key::Tab,
-                    "backspace" => Key::Backspace,
-                    "left" => Key::ArrowLeft,
-                    "right" => Key::ArrowRight,
-                    "up" => Key::ArrowUp,
-                    "down" => Key::ArrowDown,
-                    "pageup" => Key::PageUp,
-                    "pagedown" => Key::PageDown,
-                    "f6" => Key::F6,
-                    "slash" => Key::Slash,
-                    "comma" => Key::Comma,
-                    "1" => Key::Num1,
-                    "9" => Key::Num9,
-                    "l" => Key::L,
-                    other => {
-                        self.fail(format!("Unknown key: {other}"));
-                        return;
-                    }
-                };
-                let command_key = command["command"].as_bool().unwrap_or(false);
-                let modifiers = Modifiers {
-                    command: command_key,
-                    mac_cmd: command_key && cfg!(target_os = "macos"),
-                    ctrl: (command_key && !cfg!(target_os = "macos"))
-                        || command["control"].as_bool().unwrap_or(false),
-                    shift: command["shift"].as_bool().unwrap_or(false),
-                    alt: command["alt"].as_bool().unwrap_or(false),
-                };
-                input.events.push(Event::ModifiersChanged(modifiers));
-                for pressed in [true, false] {
-                    input.events.push(Event::Key {
-                        key,
-                        physical_key: Some(key),
-                        pressed,
-                        repeat: false,
-                        modifiers,
-                    });
-                }
-                input.events.push(Event::ModifiersChanged(Modifiers::NONE));
-            }
+            "key" => match super::key_input::events(&command) {
+                Ok(events) => input.events.extend(events),
+                Err(error) => self.fail(error),
+            },
+
             "pointer" => {
                 let pos = eframe::egui::pos2(
                     command["x"].as_f64().unwrap_or(0.0) as f32,

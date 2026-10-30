@@ -27,6 +27,7 @@ pub struct EditorOutput {
 }
 
 pub(crate) struct EditorInteraction<'a> {
+    pub quiet: bool,
     pub focus: &'a mut bool,
     pub restore_cursor: &'a mut bool,
     pub find: Option<FindHighlights<'a>>,
@@ -41,6 +42,7 @@ pub(crate) fn editor(
     text: &crate::i18n::Messages,
 ) -> EditorOutput {
     let EditorInteraction {
+        quiet,
         focus,
         restore_cursor,
         find,
@@ -95,7 +97,11 @@ pub(crate) fn editor(
         .auto_shrink([false, false])
         .show(ui, |ui| {
             let digit_count = metrics.lines().starts.len().ilog10() + 1;
-            let gutter = (digit_count as f32 * 7.5 + 12.0).max(24.0) + padding;
+            let gutter = if quiet {
+                padding
+            } else {
+                (digit_count as f32 * 7.5 + 12.0).max(24.0) + padding
+            };
             let width = ui.available_width();
             let font_id = crate::appearance::editor_font(theme.typography.font_size);
             let line_height = theme.typography.font_size + theme.typography.line_spacing;
@@ -158,7 +164,9 @@ pub(crate) fn editor(
             };
             result.location = lines.location(&note.body, caret);
             result.selection_changed = note.selection != before;
-            editor_gutter::paint(ui, &output, result.location.line, palette);
+            if !quiet {
+                editor_gutter::paint(ui, &output, result.location.line, palette);
+            }
         });
     result
 }

@@ -1,7 +1,6 @@
 //! Construct AppKit menus once; bindings and language changes rebuild them transactionally.
 use super::EditCommand;
 use super::MenuAction;
-use super::accelerator;
 use crate::i18n;
 use crate::i18n::Messages;
 use crate::shortcut::Command;
@@ -23,56 +22,6 @@ pub(super) struct BuiltMenu {
 }
 
 impl BuiltMenu {
-    fn item(
-        &mut self,
-        menu: &Submenu,
-        id: &str,
-        label: &str,
-        action: MenuAction,
-        keys: Option<KeyboardShortcut>,
-        context: &Context,
-    ) -> Result<()> {
-        let item = MenuItem::with_id(id, label, true, None);
-        let hint = if let Some(keys) = keys {
-            let applied = accelerator::native(keys)
-                .is_some_and(|native| item.set_key_accelerator(Some(native)).is_ok());
-            if applied {
-                None
-            } else {
-                // Muda retains the attempted value on error; clear it before appending the item.
-                item.set_key_accelerator(None)?;
-                Some(context.format_shortcut(&keys))
-            }
-        } else {
-            None
-        };
-        if let Some(hint) = &hint {
-            item.set_text(format!("{label} ({hint})"));
-        }
-        menu.append(&item)?;
-        self.items.push((item, action, hint));
-        Ok(())
-    }
-
-    fn app(
-        &mut self,
-        menu: &Submenu,
-        label: &str,
-        command: Command,
-        shortcuts: &Shortcuts,
-        context: &Context,
-    ) -> Result<()> {
-        let id = format!("app.{command:?}");
-        self.item(
-            menu,
-            &id,
-            label,
-            MenuAction::App(command),
-            shortcuts.keys(command).next(),
-            context,
-        )
-    }
-
     pub fn new(text: &Messages, shortcuts: &Shortcuts, context: &Context) -> Result<Self> {
         let mut built = Self {
             root: Menu::new(),
@@ -133,13 +82,18 @@ impl BuiltMenu {
             &app,
             "app.quit",
             &i18n::format(&text.menu_quit, &[("app", &text.app_name)]),
-            MenuAction::App(Command::Close),
-            shortcuts.keys(Command::Close).nth(1),
+            MenuAction::App(Command::Quit),
+            shortcuts.keys(Command::Quit).next(),
             context,
         )?;
         let file = Submenu::new(&text.menu_file, true);
         for (label, command) in [
             (&text.new_note, Command::New),
+            (&text.quick_capture, Command::Capture),
+            (&text.capture.new_note, Command::NewCapture),
+            (&text.capture.clipboard, Command::CaptureClipboard),
+            (&text.close_note, Command::CloseTab),
+            (&text.recently_deleted, Command::Trash),
             (&text.menu_save, Command::Save),
             (&text.export_note, Command::ExportNote),
         ] {
@@ -194,6 +148,20 @@ impl BuiltMenu {
         }
         let view = Submenu::new(&text.menu_view, true);
         built.app(&view, &text.preview, Command::Preview, shortcuts, context)?;
+        built.app(
+            &view,
+            &text.focus_mode,
+            Command::FocusMode,
+            shortcuts,
+            context,
+        )?;
+        built.app(
+            &view,
+            &text.pin_window,
+            Command::PinWindow,
+            shortcuts,
+            context,
+        )?;
         built.app(
             &view,
             &text.shortcut_toggle_theme,

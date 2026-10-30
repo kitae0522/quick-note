@@ -7,6 +7,7 @@ pub enum HeaderAction {
     Reorder { id: String, index: usize },
     FinishTabDrag,
     Delete(String),
+    CloseTab(String),
     New,
     Search,
     Options,

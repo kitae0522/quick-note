@@ -12,6 +12,28 @@ impl QuickNoteApp {
     pub fn reload_shortcuts(&mut self) {
         match Shortcuts::load(&self.directory, Platform::current()) {
             Ok(shortcuts) => {
+                #[cfg(any(target_os = "macos", target_os = "windows"))]
+                if let Some(native) = &mut self.capture.native
+                    && let Err(error) = native.update(
+                        [
+                            Command::Capture,
+                            Command::NewCapture,
+                            Command::CaptureClipboard,
+                        ]
+                        .into_iter()
+                        .flat_map(|command| {
+                            shortcuts.keys(command).map(move |keys| (command, keys))
+                        })
+                        .collect(),
+                    )
+                {
+                    self.shortcut_error = Some(
+                        i18n::message(|m| &m.error_capture)
+                            .cause("error", error)
+                            .into(),
+                    );
+                    return;
+                }
                 self.shortcuts = shortcuts;
                 self.invalidate_menu();
                 self.shortcut_error = None;

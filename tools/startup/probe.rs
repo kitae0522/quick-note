@@ -7,7 +7,6 @@ use eframe::egui::FontFamily;
 use eframe::egui::Id;
 use eframe::egui::RawInput;
 use eframe::egui::Ui;
-use eframe::egui::ViewportCommand;
 use eframe::egui::ViewportId;
 use eframe::egui::Visuals;
 use quick_note::app::QuickNoteApp;
@@ -169,7 +168,10 @@ impl App for StartupProbe {
                 )
                 .expect("fixture screenshot is valid");
             }
-            context.send_viewport_cmd(ViewportCommand::Close);
+            self.app.queue_menu_action(
+                quick_note::menu::MenuAction::App(quick_note::shortcut::Command::Quit),
+                context,
+            );
         }
     }
 

@@ -20,3 +20,5 @@ pub use controls::toggle_switch;
 
 pub mod focus_target;
 pub use focus_target::FocusTarget;
+
+pub(crate) mod search_result;

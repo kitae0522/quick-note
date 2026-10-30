@@ -69,8 +69,8 @@ fn dragging_active_and_inactive_tabs_commits_on_drop_and_retains_the_draft() -> 
 }
 
 #[test]
-fn escape_outside_drop_and_same_slot_leave_order_unchanged_and_close_still_confirms() -> Result<()>
-{
+fn escape_outside_drop_and_same_slot_leave_order_unchanged_and_close_preserves_the_note()
+-> Result<()> {
     let (_directory, app) = fixtures::fixture()?;
     let mut harness = fixtures::harness(app, [920.0, 600.0]);
     harness.run();
@@ -101,16 +101,11 @@ fn escape_outside_drop_and_same_slot_leave_order_unchanged_and_close_still_confi
     assert_eq!(tab_input::ids(&harness), original);
     assert!(harness.get_by_label("Note content").is_focused());
     assert!(harness.state().store.setting("tabOrder")?.is_none());
-    harness.get_by_label("Delete Weekend ideas").click();
+    harness.get_by_label("Close Weekend ideas").click();
     harness.run();
-    assert_eq!(
-        harness.state().pending_delete.as_deref(),
-        Some(original[2].as_str())
-    );
-    assert!(harness.get_by_label("Cancel").is_focused());
-    harness.key_press(Key::Escape);
-    harness.run();
-    assert_eq!(tab_input::ids(&harness), original);
+    assert!(harness.state().pending_delete.is_none());
+    assert!(harness.state().store.note(&original[2])?.is_some());
+    assert_eq!(tab_input::ids(&harness), original[..2]);
     Ok(())
 }
 

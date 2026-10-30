@@ -8,6 +8,7 @@ use objc2_foundation::NSArray;
 
 pub(super) struct ClipboardBackup {
     items: Vec<Retained<NSPasteboardItem>>,
+    restored: bool,
 }
 
 impl ClipboardBackup {
@@ -28,12 +29,16 @@ impl ClipboardBackup {
                 items.push(backup);
             }
         }
-        Ok(Self { items })
+        Ok(Self {
+            items,
+            restored: false,
+        })
     }
-}
 
-impl Drop for ClipboardBackup {
-    fn drop(&mut self) {
+    pub fn restore(&mut self) -> Result<(), String> {
+        if self.restored {
+            return Ok(());
+        }
         let board = NSPasteboard::generalPasteboard();
         let items: Vec<&ProtocolObject<dyn NSPasteboardWriting>> = self
             .items
@@ -42,7 +47,17 @@ impl Drop for ClipboardBackup {
             .collect();
         board.clearContents();
         if !items.is_empty() && !board.writeObjects(&NSArray::from_slice(&items)) {
-            eprintln!("Could not restore the diagnostic clipboard backup");
+            return Err("Could not restore the diagnostic clipboard backup".into());
+        }
+        self.restored = true;
+        Ok(())
+    }
+}
+
+impl Drop for ClipboardBackup {
+    fn drop(&mut self) {
+        if let Err(error) = self.restore() {
+            eprintln!("{error}");
         }
     }
 }

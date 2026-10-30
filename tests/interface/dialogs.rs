@@ -30,7 +30,7 @@ fn confirmation_content_and_actions_have_breathing_room_in_both_languages() -> R
         let title_label = app.locale.text().delete_title.clone();
         let mut harness = fixtures::harness(app, size);
         harness.run();
-        harness.key_press_modifiers(Modifiers::COMMAND, Key::W);
+        harness.key_press_modifiers(Modifiers::COMMAND | Modifiers::SHIFT, Key::Backspace);
         harness.run();
         let dialog = harness
             .ctx

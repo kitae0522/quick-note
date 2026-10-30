@@ -46,6 +46,8 @@ pub(super) struct Probe {
     pub(super) menu_key_handled: Option<bool>,
     #[cfg(target_os = "macos")]
     pub(super) clipboard_backup: Option<super::clipboard::ClipboardBackup>,
+    #[cfg(target_os = "macos")]
+    pub(super) resident_pending: Option<(u64, Instant)>,
 }
 
 impl Probe {
@@ -98,12 +100,22 @@ impl Probe {
         let native_window = super::appkit::snapshot();
         #[cfg(not(target_os = "macos"))]
         let native_window = Value::Null;
+        #[cfg(target_os = "macos")]
+        let resident = self.resident_snapshot();
+        #[cfg(not(target_os = "macos"))]
+        let resident = Value::Null;
+        #[cfg(target_os = "macos")]
+        let login_status = self.app.login_status();
+        #[cfg(not(target_os = "macos"))]
+        let login_status = "unavailable";
         json!({
             "native_window": native_window,
             "native_event_delivered": self.native_delivered,
             "focus_helpers_enabled": !self.native_mode,
             "sequence": sequence,
             "system_menu": system_menu,
+            "resident_menu": resident,
+            "login_status": login_status,
             "menu_key_handled": self.menu_key_handled,
             "language": self.app.locale.language.code(),
             "saved_label": self.app.locale.text().saved,
@@ -117,6 +129,8 @@ impl Probe {
             "editor_fonts": self.app.theme.typography.font_families(),
             "markdown_enabled": self.app.markdown_enabled(),
             "settings_open": self.app.settings_open(),
+            "capture_open": self.app.capture_open(),
+            "capture_registered": self.app.capture_registered(),
             "local_font": context.fonts(|fonts| fonts.definitions().font_data.get("local-editor").map(|font| json!({"bytes":font.bytes().len(),"face_index":font.index}))),
             "platform_font": context.fonts(|fonts| fonts.definitions().font_data.get("platform-monospace").map(|font| json!({"bytes":font.bytes().len(),"face_index":font.index,"cell_em":font.tweak.monospace_cell_width}))),
             "ui_font": context.fonts(|fonts| fonts.definitions().families.get(&eframe::egui::FontFamily::Proportional).and_then(|family| family.first()).cloned()),
@@ -145,6 +159,14 @@ impl Probe {
 
 impl eframe::App for Probe {
     fn logic(&mut self, context: &Context, _frame: &mut eframe::Frame) {
+        self.app.background(context);
+        #[cfg(target_os = "macos")]
+        if let Some((sequence, started)) = self.resident_pending.take() {
+            let report = self.report(context, sequence, started.elapsed().as_secs_f64() * 1000.0);
+            if let Err(error) = self.write_report("reply.json", report) {
+                self.fail(error);
+            }
+        }
         if !self.native_mode
             && (!self.ready || self.pending.is_some() || !self.pending_frames.is_empty())
         {

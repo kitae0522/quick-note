@@ -10,7 +10,7 @@ fn keyboard_defaults_cancel_deletion_and_shifted_shortcuts_stay_distinct() -> Re
     let mut harness = fixtures::harness(app, [920.0, 600.0]);
     harness.run();
     let original = harness.state().note.id.clone();
-    harness.key_press_modifiers(Modifiers::COMMAND, Key::W);
+    harness.key_press_modifiers(Modifiers::COMMAND | Modifiers::SHIFT, Key::Backspace);
     harness.run();
     assert!(harness.get_by_label("Cancel").is_focused());
     harness.key_press(Key::Enter);
@@ -18,7 +18,7 @@ fn keyboard_defaults_cancel_deletion_and_shifted_shortcuts_stay_distinct() -> Re
     assert!(harness.state().pending_delete.is_none());
     assert_eq!(harness.state().store.summaries()?.len(), 3);
     assert!(harness.get_by_label("Note content").is_focused());
-    harness.key_press_modifiers(Modifiers::COMMAND, Key::W);
+    harness.key_press_modifiers(Modifiers::COMMAND | Modifiers::SHIFT, Key::Backspace);
     harness.run();
     harness.key_press(Key::Escape);
     harness.run();
